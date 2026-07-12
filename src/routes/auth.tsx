@@ -4,6 +4,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
+import logoAsset from "@/assets/datyx-logo.png.asset.json";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
