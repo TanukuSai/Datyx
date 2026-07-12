@@ -131,8 +131,8 @@ function Auth() {
   return (
     <div className="mx-auto flex min-h-[80vh] max-w-md items-center px-4 py-16">
       <div className="w-full rounded-xl border border-border bg-surface p-8 shadow-card">
-        <Link to="/" className="mb-6 flex items-center gap-2 font-display text-lg font-bold">
-          <span className="grid h-8 w-8 place-items-center rounded-md bg-gradient-to-br from-primary to-accent text-primary-foreground">D</span>
+        <Link to="/" className="mb-6 flex items-center gap-2.5 font-display text-lg font-bold">
+          <img src={logoAsset.url} alt="DATYX" className="h-10 w-10 rounded-full bg-white ring-1 ring-primary/40" />
           DATYX
         </Link>
         <h1 className="font-display text-2xl font-bold">{mode === "signin" ? "Welcome back" : "Create your account"}</h1>
