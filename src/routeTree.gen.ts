@@ -18,6 +18,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedPlayLevelIdRouteImport } from './routes/_authenticated/play.$levelId'
 
 const TeamRoute = TeamRouteImport.update({
   id: '/team',
@@ -63,6 +64,12 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPlayLevelIdRoute =
+  AuthenticatedPlayLevelIdRouteImport.update({
+    id: '/play/$levelId',
+    path: '/play/$levelId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -73,6 +80,7 @@ export interface FileRoutesByFullPath {
   '/game': typeof GameRoute
   '/team': typeof TeamRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/play/$levelId': typeof AuthenticatedPlayLevelIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -83,6 +91,7 @@ export interface FileRoutesByTo {
   '/game': typeof GameRoute
   '/team': typeof TeamRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/play/$levelId': typeof AuthenticatedPlayLevelIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -95,6 +104,7 @@ export interface FileRoutesById {
   '/game': typeof GameRoute
   '/team': typeof TeamRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/play/$levelId': typeof AuthenticatedPlayLevelIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -107,6 +117,7 @@ export interface FileRouteTypes {
     | '/game'
     | '/team'
     | '/dashboard'
+    | '/play/$levelId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -117,6 +128,7 @@ export interface FileRouteTypes {
     | '/game'
     | '/team'
     | '/dashboard'
+    | '/play/$levelId'
   id:
     | '__root__'
     | '/'
@@ -128,6 +140,7 @@ export interface FileRouteTypes {
     | '/game'
     | '/team'
     | '/_authenticated/dashboard'
+    | '/_authenticated/play/$levelId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -206,15 +219,24 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/play/$levelId': {
+      id: '/_authenticated/play/$levelId'
+      path: '/play/$levelId'
+      fullPath: '/play/$levelId'
+      preLoaderRoute: typeof AuthenticatedPlayLevelIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedPlayLevelIdRoute: typeof AuthenticatedPlayLevelIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedPlayLevelIdRoute: AuthenticatedPlayLevelIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
