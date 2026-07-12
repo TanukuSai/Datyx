@@ -4,7 +4,7 @@ import CodeMirror from "@uiw/react-codemirror";
 import { sql as sqlLang } from "@codemirror/lang-sql";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, Play, Lightbulb, Trophy, Loader2, CheckCircle2, XCircle } from "lucide-react";
+import { ChevronLeft, ChevronRight, Play as PlayIcon, Lightbulb, Trophy, Loader2, CheckCircle2, XCircle } from "lucide-react";
 
 import { LEVELS, getLevel, type Level } from "@/lib/sql-quest/levels";
 import { runQuery, type RunOutcome, type RunResult } from "@/lib/sql-quest/runner";
@@ -175,7 +175,7 @@ function Play() {
           </div>
           <div className="flex items-center gap-2 border-b border-border px-4 py-3">
             <button onClick={onRun} disabled={busy} className="inline-flex items-center gap-1.5 rounded-md border border-border bg-surface px-3 py-1.5 text-sm font-medium hover:bg-secondary disabled:opacity-50">
-              {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />} Run
+              {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <PlayIcon className="h-3.5 w-3.5" />} Run
             </button>
             <button onClick={onSubmit} disabled={busy} className="inline-flex items-center gap-1.5 rounded-md bg-gradient-to-r from-primary to-accent px-3 py-1.5 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50">
               Submit
