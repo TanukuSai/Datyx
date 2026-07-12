@@ -2,6 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
+import { loadProgress, highestUnlocked, type Progress } from "@/lib/sql-quest/progress";
+import { LEVELS, LEVEL_COUNT_TOTAL } from "@/lib/sql-quest/levels";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -15,30 +17,37 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 
 function Dashboard() {
   const [user, setUser] = useState<User | null>(null);
+  const [progress, setProgress] = useState<Progress>({ cleared: {}, xp: 0 });
+
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser(data.user));
+    setProgress(loadProgress());
   }, []);
 
   const name = (user?.user_metadata?.full_name as string | undefined) || user?.email?.split("@")[0] || "member";
+  const cleared = Object.keys(progress.cleared).length;
+  const nextLevel = Math.min(highestUnlocked(progress), LEVELS.length);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
       <span className="text-sm font-medium text-primary">Dashboard</span>
       <h1 className="mt-2 font-display text-4xl font-bold">Welcome, {name} 👋</h1>
-      <p className="mt-2 text-muted-foreground">You're signed in. Start SQL Quest or explore upcoming events.</p>
+      <p className="mt-2 text-muted-foreground">Pick up where you left off in SQL Quest.</p>
 
       <div className="mt-10 grid gap-6 md:grid-cols-3">
-        <Card title="Your XP" value="0" hint="Play SQL Quest to earn XP" />
-        <Card title="Levels cleared" value="0 / 100" hint="Start with Level 1" />
-        <Card title="Coins" value="0" hint="Redeem for hints" />
+        <Card title="Total XP" value={String(progress.xp)} hint="Clear levels to earn XP" />
+        <Card title="Levels cleared" value={`${cleared} / ${LEVEL_COUNT_TOTAL}`} hint={`${LEVELS.length} seeded so far`} />
+        <Card title="Next level" value={`#${nextLevel}`} hint="Ready to play" />
       </div>
 
       <div className="mt-8 rounded-xl border border-border bg-surface p-8">
         <h2 className="font-display text-2xl font-bold">Continue your journey</h2>
-        <p className="mt-2 text-muted-foreground">The SQL Quest engine is launching soon. Explore the level map now.</p>
+        <p className="mt-2 text-muted-foreground">Jump straight into your next SQL challenge.</p>
         <div className="mt-6 flex flex-wrap gap-3">
-          <Link to="/game" className="rounded-lg bg-gradient-to-r from-primary to-accent px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow hover:opacity-90">Open SQL Quest →</Link>
-          <Link to="/events" className="rounded-lg border border-border px-5 py-2.5 text-sm font-semibold hover:bg-secondary">See events</Link>
+          <Link to="/play/$levelId" params={{ levelId: String(nextLevel) }} className="rounded-lg bg-gradient-to-r from-primary to-accent px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow hover:opacity-90">
+            ▶ Play Level {nextLevel}
+          </Link>
+          <Link to="/game" className="rounded-lg border border-border px-5 py-2.5 text-sm font-semibold hover:bg-secondary">Level map</Link>
         </div>
       </div>
     </div>
