@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Database, Trophy, Zap, Users, Code2, LineChart } from "lucide-react";
+import logoAsset from "@/assets/datyx-logo.png.asset.json";
 
 export const Route = createFileRoute("/")({
   component: Home,
@@ -13,9 +14,10 @@ function Home() {
         <div className="absolute inset-0 bg-grid opacity-60" />
         <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8 lg:py-32">
           <div className="mx-auto max-w-3xl text-center">
+            <img src={logoAsset.url} alt="DATYX Data Science Club" className="mx-auto mb-6 h-24 w-24 rounded-full bg-white shadow-glow ring-2 ring-primary/40" />
             <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
-              Official Data Science Club
+              Future Innovations · Data Science Club
             </span>
             <h1 className="mt-6 font-display text-5xl font-bold leading-[1.05] sm:text-6xl lg:text-7xl">
               Turn data into <span className="text-gradient">superpower</span>.
