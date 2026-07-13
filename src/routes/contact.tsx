@@ -2,6 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
@@ -16,9 +18,10 @@ export const Route = createFileRoute("/contact")({
 });
 
 const schema = z.object({
-  name: z.string().trim().min(2, "Name is too short").max(80),
+  name: z.string().trim().min(2, "Name is too short").max(100),
   email: z.string().trim().email("Enter a valid email").max(200),
-  message: z.string().trim().min(10, "Please write a bit more").max(1000),
+  subject: z.string().trim().min(2, "Subject is too short").max(200),
+  message: z.string().trim().min(10, "Please write a bit more").max(2000),
 });
 
 const faculty = [
@@ -34,19 +37,15 @@ const leads = [
 ];
 
 const club = [
-  { label: "Club Email", value: "datyx@club.example" },
-  { label: "Contact Number", value: "+91 00000 00000" },
-  { label: "Office Address", value: "DATYX Club Office, Campus Block, University" },
-  { label: "Instagram", value: "@datyx.club" },
-  { label: "LinkedIn", value: "linkedin.com/company/datyx" },
-  { label: "GitHub", value: "github.com/datyx-club" },
+  { label: "Club Email", value: "datyxclub@gmail.com" },
 ];
 
 function Contact() {
-  const [state, setState] = useState({ name: "", email: "", message: "" });
+  const [state, setState] = useState({ name: "", email: "", subject: "", message: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState(false);
 
-  function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
     const r = schema.safeParse(state);
     if (!r.success) {
@@ -56,8 +55,15 @@ function Contact() {
       return;
     }
     setErrors({});
-    toast.success("Message received! We'll get back within 48h.");
-    setState({ name: "", email: "", message: "" });
+    setSubmitting(true);
+    const { error } = await supabase.from("contact_messages").insert(r.data);
+    setSubmitting(false);
+    if (error) {
+      toast.error("Could not send message. Please try again.");
+      return;
+    }
+    toast.success("Thank you for contacting DATYX. Your message has been received successfully. Our team will get back to you as soon as possible.");
+    setState({ name: "", email: "", subject: "", message: "" });
   }
 
   return (
@@ -113,16 +119,19 @@ function Contact() {
       <form onSubmit={submit} className="mt-10 space-y-5 rounded-xl border border-border bg-surface p-8">
         <h2 className="font-display text-lg font-semibold">Send us a message</h2>
         <Field label="Name" error={errors.name}>
-          <input value={state.name} onChange={(e) => setState({ ...state, name: e.target.value })} maxLength={80} className="input" />
+          <input value={state.name} onChange={(e) => setState({ ...state, name: e.target.value })} maxLength={100} className="input" />
         </Field>
         <Field label="Email" error={errors.email}>
           <input type="email" value={state.email} onChange={(e) => setState({ ...state, email: e.target.value })} maxLength={200} className="input" />
         </Field>
-        <Field label="Message" error={errors.message}>
-          <textarea rows={5} value={state.message} onChange={(e) => setState({ ...state, message: e.target.value })} maxLength={1000} className="input resize-y" />
+        <Field label="Subject" error={errors.subject}>
+          <input value={state.subject} onChange={(e) => setState({ ...state, subject: e.target.value })} maxLength={200} className="input" />
         </Field>
-        <button className="rounded-lg bg-gradient-to-r from-primary to-accent px-6 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow hover:opacity-90">
-          Send message
+        <Field label="Message" error={errors.message}>
+          <textarea rows={5} value={state.message} onChange={(e) => setState({ ...state, message: e.target.value })} maxLength={2000} className="input resize-y" />
+        </Field>
+        <button type="submit" disabled={submitting} className="rounded-lg bg-gradient-to-r from-primary to-accent px-6 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow hover:opacity-90 disabled:opacity-60">
+          {submitting ? "Sending…" : "Send message"}
         </button>
       </form>
 
