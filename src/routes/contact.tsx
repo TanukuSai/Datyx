@@ -18,9 +18,10 @@ export const Route = createFileRoute("/contact")({
 });
 
 const schema = z.object({
-  name: z.string().trim().min(2, "Name is too short").max(80),
+  name: z.string().trim().min(2, "Name is too short").max(100),
   email: z.string().trim().email("Enter a valid email").max(200),
-  message: z.string().trim().min(10, "Please write a bit more").max(1000),
+  subject: z.string().trim().min(2, "Subject is too short").max(200),
+  message: z.string().trim().min(10, "Please write a bit more").max(2000),
 });
 
 const faculty = [
