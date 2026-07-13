@@ -7,7 +7,7 @@ export const Route = createFileRoute("/contact")({
   head: () => ({
     meta: [
       { title: "Contact — DATYX" },
-      { name: "description", content: "Get in touch with DATYX Club — partnerships, talks and general questions." },
+      { name: "description", content: "Reach the DATYX faculty coordinators and student track leads." },
       { property: "og:title", content: "Contact — DATYX" },
       { property: "og:description", content: "Get in touch with the DATYX team." },
     ],
@@ -20,6 +20,27 @@ const schema = z.object({
   email: z.string().trim().email("Enter a valid email").max(200),
   message: z.string().trim().min(10, "Please write a bit more").max(1000),
 });
+
+const faculty = [
+  { n: "CH Sai Priya", r: "Faculty Coordinator" },
+  { n: "Marthineni Shilpa", r: "Faculty Coordinator" },
+];
+
+const leads = [
+  { n: "Sai Pournami", r: "Tech Track" },
+  { n: "Sannith Reddy", r: "Workshops & Hackathons" },
+  { n: "Ashok Vallabhuni", r: "Innovation, Entrepreneurship & Cyber Security" },
+  { n: "Balu Shalini", r: "Data Science Track" },
+];
+
+const club = [
+  { label: "Club Email", value: "datyx@club.example" },
+  { label: "Contact Number", value: "+91 00000 00000" },
+  { label: "Office Address", value: "DATYX Club Office, Campus Block, University" },
+  { label: "Instagram", value: "@datyx.club" },
+  { label: "LinkedIn", value: "linkedin.com/company/datyx" },
+  { label: "GitHub", value: "github.com/datyx-club" },
+];
 
 function Contact() {
   const [state, setState] = useState({ name: "", email: "", message: "" });
@@ -40,12 +61,57 @@ function Contact() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-20 sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-5xl px-4 py-20 sm:px-6 lg:px-8">
       <span className="text-sm font-medium text-primary">Contact</span>
       <h1 className="mt-2 font-display text-4xl font-bold sm:text-5xl">Talk to us</h1>
-      <p className="mt-4 text-muted-foreground">Partnerships, guest talks, sponsorships or just saying hi — we love it all.</p>
+      <p className="mt-4 max-w-2xl text-muted-foreground">
+        Partnerships, guest talks, sponsorships or general questions — reach a coordinator, a track lead, or send us a message.
+      </p>
+
+      <section className="mt-12 grid gap-6 md:grid-cols-2">
+        <div className="rounded-xl border border-border bg-surface p-6">
+          <h2 className="font-display text-lg font-semibold">Faculty Coordinators</h2>
+          <ul className="mt-4 space-y-3">
+            {faculty.map((f) => (
+              <li key={f.n} className="flex items-center justify-between gap-3">
+                <div>
+                  <div className="text-sm font-medium">{f.n}</div>
+                  <div className="text-xs text-muted-foreground">{f.r}</div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="rounded-xl border border-border bg-surface p-6">
+          <h2 className="font-display text-lg font-semibold">Student Track Leads</h2>
+          <ul className="mt-4 space-y-3">
+            {leads.map((l) => (
+              <li key={l.n} className="flex items-center justify-between gap-3">
+                <div>
+                  <div className="text-sm font-medium">{l.n}</div>
+                  <div className="text-xs text-muted-foreground">{l.r}</div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      <section className="mt-6 rounded-xl border border-border bg-surface p-6">
+        <h2 className="font-display text-lg font-semibold">Club Details</h2>
+        <dl className="mt-4 grid gap-4 sm:grid-cols-2">
+          {club.map((c) => (
+            <div key={c.label}>
+              <dt className="text-xs uppercase tracking-wide text-muted-foreground">{c.label}</dt>
+              <dd className="mt-1 text-sm font-medium">{c.value}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
 
       <form onSubmit={submit} className="mt-10 space-y-5 rounded-xl border border-border bg-surface p-8">
+        <h2 className="font-display text-lg font-semibold">Send us a message</h2>
         <Field label="Name" error={errors.name}>
           <input value={state.name} onChange={(e) => setState({ ...state, name: e.target.value })} maxLength={80} className="input" />
         </Field>
