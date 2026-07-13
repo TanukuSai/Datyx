@@ -37,12 +37,7 @@ const leads = [
 ];
 
 const club = [
-  { label: "Club Email", value: "datyx@club.example" },
-  { label: "Contact Number", value: "+91 00000 00000" },
-  { label: "Office Address", value: "DATYX Club Office, Campus Block, University" },
-  { label: "Instagram", value: "@datyx.club" },
-  { label: "LinkedIn", value: "linkedin.com/company/datyx" },
-  { label: "GitHub", value: "github.com/datyx-club" },
+  { label: "Club Email", value: "datyxclub@gmail.com" },
 ];
 
 function Contact() {
