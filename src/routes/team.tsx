@@ -13,33 +13,28 @@ export const Route = createFileRoute("/team")({
 });
 
 const faculty = [
-  { n: "CH Sai Priya", r: "Faculty Coordinator", b: "Guides DATYX academic direction and student mentorship." },
-  { n: "Marthineni Shilpa", r: "Faculty Coordinator", b: "Oversees club initiatives, research and industry collaboration." },
-];
-
-const clubLeads = [
-  { n: "CH Sai Priya", r: "2nd Year Club Lead", b: "Anchors DATYX programming for 2nd year members." },
-  { n: "Marthineni Shilpa", r: "3rd Year Club Lead", b: "Drives DATYX activities for 3rd year members." },
+  { n: "CH SAI PRIYA", r: "Faculty Coordinator", b: "Guides DATYX academic direction and student mentorship." },
+  { n: "MARTHINENI SHILPA", r: "Faculty Coordinator", b: "Oversees club initiatives, research and industry collaboration." },
 ];
 
 const trackLeads = [
   {
-    n: "Sai Pournami",
-    r: "Tech Track Lead",
-    b: "Vertex Hack · CodeForge · DevSprint · Open Source Week",
-  },
-  {
-    n: "Sannith Reddy",
-    r: "Workshops & Hackathons Lead",
-    b: "Tech Workshops · Hackathons · Tech Treasure Hunt",
-  },
-  {
-    n: "Ashok Vallabhuni",
+    n: "ASHOK VALLABHUNI",
     r: "Innovation, Entrepreneurship & Cyber Security Lead",
     b: "Startup Weekend · Innovation Expo · Founder Fireside · Cyber Awareness · Cyber Security Fundamentals",
   },
   {
-    n: "Balu Shalini",
+    n: "SAI POURNAMI",
+    r: "Tech Track Lead",
+    b: "Vertex Hack · CodeForge · DevSprint · Open Source Week",
+  },
+  {
+    n: "SANNITH REDDY",
+    r: "Workshops & Hackathons Lead",
+    b: "Tech Workshops · Hackathons · Tech Treasure Hunt",
+  },
+  {
+    n: "BALU SHALINI",
     r: "Data Science Track Lead",
     b: "Data Detective · Model Masters · SQL Game · VizVerse · AI Labs",
   },
