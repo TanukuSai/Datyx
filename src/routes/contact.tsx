@@ -119,16 +119,19 @@ function Contact() {
       <form onSubmit={submit} className="mt-10 space-y-5 rounded-xl border border-border bg-surface p-8">
         <h2 className="font-display text-lg font-semibold">Send us a message</h2>
         <Field label="Name" error={errors.name}>
-          <input value={state.name} onChange={(e) => setState({ ...state, name: e.target.value })} maxLength={80} className="input" />
+          <input value={state.name} onChange={(e) => setState({ ...state, name: e.target.value })} maxLength={100} className="input" />
         </Field>
         <Field label="Email" error={errors.email}>
           <input type="email" value={state.email} onChange={(e) => setState({ ...state, email: e.target.value })} maxLength={200} className="input" />
         </Field>
-        <Field label="Message" error={errors.message}>
-          <textarea rows={5} value={state.message} onChange={(e) => setState({ ...state, message: e.target.value })} maxLength={1000} className="input resize-y" />
+        <Field label="Subject" error={errors.subject}>
+          <input value={state.subject} onChange={(e) => setState({ ...state, subject: e.target.value })} maxLength={200} className="input" />
         </Field>
-        <button className="rounded-lg bg-gradient-to-r from-primary to-accent px-6 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow hover:opacity-90">
-          Send message
+        <Field label="Message" error={errors.message}>
+          <textarea rows={5} value={state.message} onChange={(e) => setState({ ...state, message: e.target.value })} maxLength={2000} className="input resize-y" />
+        </Field>
+        <button type="submit" disabled={submitting} className="rounded-lg bg-gradient-to-r from-primary to-accent px-6 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow hover:opacity-90 disabled:opacity-60">
+          {submitting ? "Sending…" : "Send message"}
         </button>
       </form>
 
