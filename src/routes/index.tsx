@@ -34,10 +34,10 @@ function Home() {
               </Link>
             </div>
             <div className="mt-10 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm text-muted-foreground">
-              <Stat n="1.2k+" l="Members" />
-              <Stat n="100" l="SQL Levels" />
-              <Stat n="24" l="Workshops / yr" />
-              <Stat n="15+" l="Live projects" />
+              <Stat n="0" l="Workshops" />
+              <Stat n="0" l="SQL Games" />
+              <Stat n="0" l="Members" />
+              <Stat n="0" l="Live Projects" />
             </div>
           </div>
         </div>
