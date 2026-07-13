@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TeamRouteImport } from './routes/team'
 import { Route as GameRouteImport } from './routes/game'
 import { Route as EventsRouteImport } from './routes/events'
+import { Route as EntertainmentRouteImport } from './routes/entertainment'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AboutRouteImport } from './routes/about'
@@ -33,6 +34,11 @@ const GameRoute = GameRouteImport.update({
 const EventsRoute = EventsRouteImport.update({
   id: '/events',
   path: '/events',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EntertainmentRoute = EntertainmentRouteImport.update({
+  id: '/entertainment',
+  path: '/entertainment',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactRoute = ContactRouteImport.update({
@@ -76,6 +82,7 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
+  '/entertainment': typeof EntertainmentRoute
   '/events': typeof EventsRoute
   '/game': typeof GameRoute
   '/team': typeof TeamRoute
@@ -87,6 +94,7 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
+  '/entertainment': typeof EntertainmentRoute
   '/events': typeof EventsRoute
   '/game': typeof GameRoute
   '/team': typeof TeamRoute
@@ -100,6 +108,7 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
+  '/entertainment': typeof EntertainmentRoute
   '/events': typeof EventsRoute
   '/game': typeof GameRoute
   '/team': typeof TeamRoute
@@ -113,6 +122,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/auth'
     | '/contact'
+    | '/entertainment'
     | '/events'
     | '/game'
     | '/team'
@@ -124,6 +134,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/auth'
     | '/contact'
+    | '/entertainment'
     | '/events'
     | '/game'
     | '/team'
@@ -136,6 +147,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/auth'
     | '/contact'
+    | '/entertainment'
     | '/events'
     | '/game'
     | '/team'
@@ -149,6 +161,7 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   AuthRoute: typeof AuthRoute
   ContactRoute: typeof ContactRoute
+  EntertainmentRoute: typeof EntertainmentRoute
   EventsRoute: typeof EventsRoute
   GameRoute: typeof GameRoute
   TeamRoute: typeof TeamRoute
@@ -175,6 +188,13 @@ declare module '@tanstack/react-router' {
       path: '/events'
       fullPath: '/events'
       preLoaderRoute: typeof EventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/entertainment': {
+      id: '/entertainment'
+      path: '/entertainment'
+      fullPath: '/entertainment'
+      preLoaderRoute: typeof EntertainmentRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contact': {
@@ -248,6 +268,7 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   AuthRoute: AuthRoute,
   ContactRoute: ContactRoute,
+  EntertainmentRoute: EntertainmentRoute,
   EventsRoute: EventsRoute,
   GameRoute: GameRoute,
   TeamRoute: TeamRoute,
