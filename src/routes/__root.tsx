@@ -125,6 +125,7 @@ function SiteHeader({ user }: { user: User | null }) {
     { to: "/about", label: "About" },
     { to: "/game", label: "SQL Quest" },
     { to: "/events", label: "Events" },
+    { to: "/entertainment", label: "Every Saturday" },
     { to: "/team", label: "Team" },
     { to: "/contact", label: "Contact" },
   ] as const;
