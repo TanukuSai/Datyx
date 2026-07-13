@@ -82,12 +82,12 @@ function Team() {
       <span className="text-sm font-medium text-primary">Team</span>
       <h1 className="mt-2 font-display text-4xl font-bold sm:text-5xl">The people behind DATYX</h1>
       <p className="mt-4 max-w-2xl text-muted-foreground">
-        Faculty coordinators, club leads and student track leads shaping every workshop, hackathon and Saturday activity at DATYX.
+        Faculty coordinators and student track leads shaping every workshop, hackathon and Saturday activity at DATYX.
       </p>
 
       <Section label="Faculty" title="Faculty Coordinators" items={faculty} />
-      <Section label="Leadership" title="Club Leads" items={clubLeads} />
       <Section label="Tracks" title="Student Track Leads" sub="Each lead owns a track and the events that run under it." items={trackLeads} />
+
     </div>
   );
 }
