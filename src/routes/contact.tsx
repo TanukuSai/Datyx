@@ -41,10 +41,11 @@ const club = [
 ];
 
 function Contact() {
-  const [state, setState] = useState({ name: "", email: "", message: "" });
+  const [state, setState] = useState({ name: "", email: "", subject: "", message: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState(false);
 
-  function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
     const r = schema.safeParse(state);
     if (!r.success) {
@@ -54,8 +55,15 @@ function Contact() {
       return;
     }
     setErrors({});
-    toast.success("Message received! We'll get back within 48h.");
-    setState({ name: "", email: "", message: "" });
+    setSubmitting(true);
+    const { error } = await supabase.from("contact_messages").insert(r.data);
+    setSubmitting(false);
+    if (error) {
+      toast.error("Could not send message. Please try again.");
+      return;
+    }
+    toast.success("Thank you for contacting DATYX. Your message has been received successfully. Our team will get back to you as soon as possible.");
+    setState({ name: "", email: "", subject: "", message: "" });
   }
 
   return (
