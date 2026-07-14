@@ -40,25 +40,28 @@ function Game() {
     <div>
       <section className="relative overflow-hidden bg-hero">
         <div className="absolute inset-0 bg-grid opacity-60" />
-        <div className="relative mx-auto max-w-6xl px-4 py-20 text-center sm:px-6 lg:px-8">
-          <span className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-xs font-medium text-accent">🎮 GAME MODE</span>
-          <h1 className="mt-4 font-display text-5xl font-bold sm:text-6xl">SQL Quest — <span className="text-gradient">100 Level Challenge</span></h1>
-          <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">Real SQL in your browser. {seeded} live levels seeded, {LEVEL_COUNT_TOTAL - seeded} more on the roadmap. Solve, earn XP, unlock the next.</p>
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            {authed ? (
-              <Link to="/play/$levelId" params={{ levelId: "1" }} className="rounded-lg bg-gradient-to-r from-primary to-accent px-6 py-3 text-sm font-semibold text-primary-foreground shadow-glow hover:opacity-90">
-                ▶ Start Level 1
-              </Link>
-            ) : (
-              <Link to="/auth" className="rounded-lg bg-gradient-to-r from-primary to-accent px-6 py-3 text-sm font-semibold text-primary-foreground shadow-glow hover:opacity-90">
-                Sign in to play →
-              </Link>
-            )}
-            <a href="#tiers" className="rounded-lg border border-border bg-surface-elevated px-6 py-3 text-sm font-semibold hover:bg-secondary">See the tiers</a>
+        <div className="relative mx-auto grid max-w-6xl gap-10 px-4 py-20 sm:px-6 lg:grid-cols-[1.2fr_1fr] lg:items-center lg:px-8">
+          <div>
+            <span className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-xs font-medium text-accent">🎮 GAME MODE</span>
+            <h1 className="mt-4 font-display text-5xl font-bold sm:text-6xl">SQL Quest — <span className="text-gradient">100 Level Challenge</span></h1>
+            <p className="mt-4 max-w-xl text-muted-foreground">Real SQL in your browser. {seeded} live levels seeded, {LEVEL_COUNT_TOTAL - seeded} more on the roadmap. Solve, earn XP, unlock the next.</p>
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              {authed ? (
+                <Link to="/play/$levelId" params={{ levelId: "1" }} className="rounded-full bg-black px-6 py-3 text-sm font-semibold text-white hover:opacity-90">
+                  ▶ Start Level 1
+                </Link>
+              ) : (
+                <Link to="/auth" className="rounded-full bg-black px-6 py-3 text-sm font-semibold text-white hover:opacity-90">
+                  Sign in to play →
+                </Link>
+              )}
+              <a href="#tiers" className="rounded-full border-[1.5px] border-black bg-white px-6 py-3 text-sm font-semibold hover:bg-secondary">See the tiers</a>
+            </div>
           </div>
-          <img src={sketchCoder} alt="Doodle of a coder at a computer" loading="lazy" width={1024} height={768} className="mx-auto mt-12 w-full max-w-xl" />
+          <img src={sketchCoder} alt="Doodle of a coder at a computer" loading="lazy" width={1024} height={768} className="w-full max-w-md justify-self-center lg:justify-self-end" />
         </div>
       </section>
+
 
 
       <section id="tiers" className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">

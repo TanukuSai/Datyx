@@ -3,7 +3,9 @@ import { Database, Trophy, Zap, Users, Code2, LineChart } from "lucide-react";
 import { useEffect, useState } from "react";
 import logoAsset from "@/assets/datyx-logo.png.asset.json";
 import sketchCommunity from "@/assets/sketch-community.png";
+import sketchRocket from "@/assets/sketch-rocket.png";
 import { supabase } from "@/integrations/supabase/client";
+
 
 export const Route = createFileRoute("/")({
   component: Home,
@@ -123,13 +125,17 @@ ORDER  BY amount DESC;`}
       </section>
 
       {/* Final CTA */}
-      <section className="mx-auto max-w-4xl px-4 py-24 text-center sm:px-6 lg:px-8">
-        <h2 className="font-display text-3xl font-bold sm:text-4xl">Ready to join <span className="text-gradient">DATYX</span>?</h2>
-        <p className="mt-3 text-muted-foreground">Create your account with email or Google. It takes 30 seconds.</p>
-        <Link to="/auth" className="mt-8 inline-flex rounded-lg bg-gradient-to-r from-primary to-accent px-8 py-3 text-sm font-semibold text-primary-foreground shadow-glow hover:opacity-90">
-          Create account
-        </Link>
+      <section className="mx-auto grid max-w-5xl gap-8 px-4 py-24 md:grid-cols-[1fr_1.4fr] md:items-center sm:px-6 lg:px-8">
+        <img src={sketchRocket} alt="Doodle rocket launching upward" loading="lazy" className="w-full max-w-[220px] justify-self-center" />
+        <div className="text-center md:text-left">
+          <h2 className="font-display text-3xl font-bold sm:text-4xl">Ready to join <span className="text-gradient">DATYX</span>?</h2>
+          <p className="mt-3 text-muted-foreground">Create your account with email or Google. It takes 30 seconds.</p>
+          <Link to="/auth" className="mt-8 inline-flex rounded-full bg-black px-8 py-3 text-sm font-semibold text-white hover:opacity-90">
+            Create account
+          </Link>
+        </div>
       </section>
+
     </div>
   );
 }

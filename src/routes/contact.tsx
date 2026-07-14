@@ -70,13 +70,18 @@ function Contact() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-20 sm:px-6 lg:px-8">
-      <span className="text-sm font-medium text-primary">Contact</span>
-      <h1 className="mt-2 font-display text-4xl font-bold sm:text-5xl">Talk to us</h1>
-      <p className="mt-4 max-w-2xl text-muted-foreground">
-        Partnerships, guest talks, sponsorships or general questions — reach a coordinator, a track lead, or send us a message.
-      </p>
+      <div className="grid gap-10 md:grid-cols-[1.2fr_1fr] md:items-center">
+        <div>
+          <span className="text-sm font-medium text-primary">Contact</span>
+          <h1 className="mt-2 font-display text-4xl font-bold sm:text-5xl">Talk to us</h1>
+          <p className="mt-4 max-w-2xl text-muted-foreground">
+            Partnerships, guest talks, sponsorships or general questions — reach a coordinator, a track lead, or send us a message.
+          </p>
+        </div>
+        <img src={sketchContact} alt="Doodle person saying hello with an envelope" loading="lazy" width={1024} height={768} className="w-full max-w-xs justify-self-center md:justify-self-end" />
+      </div>
 
-      <img src={sketchContact} alt="Doodle person saying hello with an envelope" loading="lazy" width={1024} height={768} className="mx-auto mt-8 w-full max-w-sm" />
+
 
       <section className="mt-12 grid gap-6 md:grid-cols-2">
         <div className="rounded-xl border border-border bg-surface p-6">

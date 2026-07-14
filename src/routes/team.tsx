@@ -87,13 +87,17 @@ function Section({ label, title, sub, items }: { label: string; title: string; s
 function Team() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:px-8">
-      <span className="text-sm font-medium text-primary">Team</span>
-      <h1 className="mt-2 font-display text-4xl font-bold sm:text-5xl">The people behind DATYX</h1>
-      <p className="mt-4 max-w-2xl text-muted-foreground">
-        Faculty coordinators and student track leads shaping every workshop, hackathon and Saturday activity at DATYX.
-      </p>
+      <div className="grid gap-10 md:grid-cols-[1fr_1.2fr] md:items-center">
+        <img src={sketchTeam} alt="Doodle of team members waving" loading="lazy" width={1024} height={768} className="order-2 w-full max-w-md justify-self-center md:order-1" />
+        <div className="order-1 md:order-2">
+          <span className="text-sm font-medium text-primary">Team</span>
+          <h1 className="mt-2 font-display text-4xl font-bold sm:text-5xl">The people behind DATYX</h1>
+          <p className="mt-4 max-w-2xl text-muted-foreground">
+            Faculty coordinators and student track leads shaping every workshop, hackathon and Saturday activity at DATYX.
+          </p>
+        </div>
+      </div>
 
-      <img src={sketchTeam} alt="Doodle of team members waving" loading="lazy" width={1024} height={768} className="mx-auto mt-10 w-full max-w-3xl" />
 
       <Section label="Faculty" title="Faculty Coordinators" items={faculty} />
       <Section label="Tracks" title="Student Track Leads" sub="Each lead owns a track and the events that run under it." items={trackLeads} />
