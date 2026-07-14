@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import sketchCommunity from "@/assets/sketch-community.png";
+import sketchThink from "@/assets/sketch-think.png";
+
 
 export const Route = createFileRoute("/about")({
   head: () => ({
