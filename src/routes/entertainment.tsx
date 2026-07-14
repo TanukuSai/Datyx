@@ -34,13 +34,17 @@ const activities: Activity[] = [
 function Entertainment() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:px-8">
-      <span className="text-sm font-medium text-primary">Entertainment & Engagement</span>
-      <h1 className="mt-2 font-display text-4xl font-bold sm:text-5xl">Every Saturday at DATYX</h1>
-      <p className="mt-4 max-w-2xl text-muted-foreground">
-        A recurring lineup of activities that keep the club energetic — play, build, pitch and code together. All activities run every Saturday.
-      </p>
+      <div className="grid gap-10 md:grid-cols-[1.2fr_1fr] md:items-center">
+        <div>
+          <span className="text-sm font-medium text-primary">Entertainment & Engagement</span>
+          <h1 className="mt-2 font-display text-4xl font-bold sm:text-5xl">Every Saturday at DATYX</h1>
+          <p className="mt-4 max-w-2xl text-muted-foreground">
+            A recurring lineup of activities that keep the club energetic — play, build, pitch and code together. All activities run every Saturday.
+          </p>
+        </div>
+        <img src={sketchFun} alt="Friends playing music and games" loading="lazy" width={1024} height={768} className="w-full max-w-sm justify-self-center md:justify-self-end" />
+      </div>
 
-      <img src={sketchFun} alt="Friends playing music and games" loading="lazy" width={1024} height={768} className="mx-auto mt-10 w-full max-w-2xl" />
 
       <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {activities.map((a) => (

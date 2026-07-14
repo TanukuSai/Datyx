@@ -15,14 +15,18 @@ export const Route = createFileRoute("/about")({
 
 function About() {
   return (
-    <div className="mx-auto max-w-4xl px-4 py-20 sm:px-6 lg:px-8">
-      <span className="text-sm font-medium text-primary">About</span>
-      <h1 className="mt-2 font-display text-4xl font-bold sm:text-5xl">We're building the data community we wish we had.</h1>
-      <p className="mt-6 text-lg text-muted-foreground">
-        DATYX is a student-run data science club with one mission: help every member go from curious to confident with data. We host workshops, ship open-source projects, run gamified challenges and connect students with mentors and industry.
-      </p>
+    <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:px-8">
+      <div className="grid gap-10 md:grid-cols-[1.2fr_1fr] md:items-center">
+        <div>
+          <span className="text-sm font-medium text-primary">About</span>
+          <h1 className="mt-2 font-display text-4xl font-bold sm:text-5xl">We're building the data community we wish we had.</h1>
+          <p className="mt-6 text-lg text-muted-foreground">
+            DATYX is a student-run data science club with one mission: help every member go from curious to confident with data. We host workshops, ship open-source projects, run gamified challenges and connect students with mentors and industry.
+          </p>
+        </div>
+        <img src={sketchCommunity} alt="Community learning together" loading="lazy" width={1024} height={768} className="w-full max-w-md justify-self-center md:justify-self-end" />
+      </div>
 
-      <img src={sketchCommunity} alt="Community learning together" loading="lazy" width={1024} height={768} className="mx-auto mt-12 w-full max-w-2xl" />
 
 
 

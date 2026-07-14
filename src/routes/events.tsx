@@ -1,49 +1,23 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import sketchEvents from "@/assets/sketch-events.png";
+import sketchCalendar from "@/assets/sketch-calendar.png";
 
-type LiveEvent = { id: string; title: string; description: string | null; event_date: string | null; start_time: string | null; venue: string | null; category: string | null; registration_link: string | null; status: string; poster_url: string | null };
-
-function LiveEvents() {
-  const [rows, setRows] = useState<LiveEvent[]>([]);
-  useEffect(() => {
-    supabase.from("events").select("*").in("status", ["upcoming", "live"]).order("event_date", { ascending: true }).then(({ data }) => setRows((data as LiveEvent[]) || []));
-  }, []);
-  if (rows.length === 0) return null;
-  return (
-    <section className="mt-10">
-      <span className="text-sm font-medium text-accent">Live from Admin</span>
-      <h2 className="mt-1 font-display text-2xl font-bold sm:text-3xl">Upcoming & Live Events</h2>
-      <div className="mt-6 grid gap-4 sm:grid-cols-2">
-        {rows.map((e) => (
-          <div key={e.id} className="rounded-xl border border-border bg-surface p-5 shadow-card">
-            {e.poster_url && <img src={e.poster_url} alt={e.title} className="mb-3 h-40 w-full rounded-lg object-cover" />}
-            <div className="text-xs text-accent">{e.category || "Event"} · {e.status}</div>
-            <h3 className="mt-1 font-display text-lg font-semibold">{e.title}</h3>
-            {e.description && <p className="mt-1 text-sm text-muted-foreground">{e.description}</p>}
-            <div className="mt-2 text-xs text-muted-foreground">
-              {e.event_date && <span>{e.event_date}</span>}{e.start_time && <span> · {e.start_time}</span>}{e.venue && <span> · {e.venue}</span>}
-            </div>
-            <div className="mt-3 flex gap-2">
-              <Link to="/dashboard" className="rounded-full bg-primary px-4 py-1.5 text-xs font-semibold text-primary-foreground hover:opacity-90">Register (member)</Link>
-              {e.registration_link && <a href={e.registration_link} target="_blank" rel="noreferrer" className="rounded-full border border-border px-4 py-1.5 text-xs font-medium hover:bg-secondary">External link ↗</a>}
-            </div>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
+type LiveEvent = {
+  id: string; title: string; description: string | null; event_date: string | null;
+  start_time: string | null; end_time: string | null; venue: string | null;
+  category: string | null; registration_link: string | null; status: string; poster_url: string | null;
+  organizer: string | null;
+};
 
 export const Route = createFileRoute("/events")({
   head: () => ({
     meta: [
       { title: "Events — DATYX" },
-      { name: "description", content: "Tech, Workshops & Hackathons, Innovation & Cyber Security and Data Science events at DATYX Club." },
+      { name: "description", content: "Tech, Workshops & Hackathons, Innovation & Cyber Security and Data Science events at DATYX Club. See the live event calendar." },
       { property: "og:title", content: "Events — DATYX" },
-      { property: "og:description", content: "Explore DATYX events across Tech, Workshops, Innovation, Cyber Security and Data Science tracks." },
+      { property: "og:description", content: "Interactive event calendar and every DATYX track — Tech, Workshops, Innovation, Cyber Security and Data Science." },
     ],
   }),
   component: Events,
@@ -53,80 +27,185 @@ type EventItem = { slug: string; t: string; desc: string; difficulty: "Beginner"
 type Track = { key: string; name: string; tag: string; blurb: string; events: EventItem[] };
 
 const tracks: Track[] = [
-  {
-    key: "tech",
-    name: "Tech Track",
-    tag: "Tech",
-    blurb: "Build, ship and compete on the fundamentals.",
-    events: [
-      { slug: "vertex-hack", t: "Vertex Hack", desc: "24-hour innovation hackathon where students solve real-world problems.", difficulty: "Advanced" },
-      { slug: "codeforge", t: "CodeForge", desc: "Competitive coding contest focusing on algorithms and programming.", difficulty: "Intermediate" },
-      { slug: "devsprint", t: "DevSprint", desc: "Fast-paced web and application development competition.", difficulty: "Intermediate" },
-      { slug: "open-source-week", t: "Open Source Week", desc: "Learn Git, GitHub and contribute to open-source projects.", difficulty: "Beginner" },
-    ],
-  },
-  {
-    key: "workshops",
-    name: "Workshops & Hackathons",
-    tag: "Workshops",
-    blurb: "Hands-on learning and team-based building.",
-    events: [
-      { slug: "tech-workshops", t: "Tech Workshops", desc: "Hands-on learning sessions on trending technologies.", difficulty: "Beginner" },
-      { slug: "hackathons", t: "Hackathons", desc: "Team-based innovation competitions.", difficulty: "Advanced" },
-      { slug: "tech-treasure-hunt", t: "Tech Treasure Hunt", desc: "A fun technical puzzle-solving challenge across multiple rounds.", difficulty: "Intermediate" },
-    ],
-  },
-  {
-    key: "innovation",
-    name: "Innovation & Cyber Security",
-    tag: "Innovation",
-    blurb: "From startup ideas to secure systems.",
-    events: [
-      { slug: "startup-weekend", t: "Startup Weekend", desc: "Build startup ideas and pitch them to mentors.", difficulty: "Intermediate" },
-      { slug: "innovation-expo", t: "Innovation Expo", desc: "Showcase innovative technical projects.", difficulty: "Beginner" },
-      { slug: "founder-fireside", t: "Founder Fireside", desc: "Interactive discussions with startup founders and entrepreneurs.", difficulty: "Beginner" },
-      { slug: "cyber-awareness", t: "Cyber Awareness", desc: "Learn safe digital practices and cybersecurity awareness.", difficulty: "Beginner" },
-      { slug: "cyber-security-fundamentals", t: "Cyber Security Fundamentals", desc: "Introduction to ethical hacking and cybersecurity concepts.", difficulty: "Intermediate" },
-    ],
-  },
-  {
-    key: "data",
-    name: "Data Science Track",
-    tag: "Data Science",
-    blurb: "Analyze, model, visualize and automate with data.",
-    events: [
-      { slug: "data-detective", t: "Data Detective", desc: "Real-world data analysis challenge.", difficulty: "Intermediate" },
-      { slug: "model-masters", t: "Model Masters", desc: "Machine learning competition.", difficulty: "Advanced" },
-      { slug: "sql-game", t: "SQL Game", desc: "Interactive SQL challenge with increasing difficulty.", difficulty: "Beginner" },
-      { slug: "vizverse", t: "VizVerse", desc: "Create insightful data visualizations.", difficulty: "Intermediate" },
-      { slug: "ai-labs", t: "AI Labs", desc: "Hands-on AI and Machine Learning workshops.", difficulty: "Advanced" },
-    ],
-  },
+  { key: "tech", name: "Tech Track", tag: "Tech", blurb: "Build, ship and compete on the fundamentals.", events: [
+    { slug: "vertex-hack", t: "Vertex Hack", desc: "24-hour innovation hackathon where students solve real-world problems.", difficulty: "Advanced" },
+    { slug: "codeforge", t: "CodeForge", desc: "Competitive coding contest focusing on algorithms and programming.", difficulty: "Intermediate" },
+    { slug: "devsprint", t: "DevSprint", desc: "Fast-paced web and application development competition.", difficulty: "Intermediate" },
+    { slug: "open-source-week", t: "Open Source Week", desc: "Learn Git, GitHub and contribute to open-source projects.", difficulty: "Beginner" },
+  ]},
+  { key: "workshops", name: "Workshops & Hackathons", tag: "Workshops", blurb: "Hands-on learning and team-based building.", events: [
+    { slug: "tech-workshops", t: "Tech Workshops", desc: "Hands-on learning sessions on trending technologies.", difficulty: "Beginner" },
+    { slug: "hackathons", t: "Hackathons", desc: "Team-based innovation competitions.", difficulty: "Advanced" },
+    { slug: "tech-treasure-hunt", t: "Tech Treasure Hunt", desc: "A fun technical puzzle-solving challenge across multiple rounds.", difficulty: "Intermediate" },
+  ]},
+  { key: "innovation", name: "Innovation & Cyber Security", tag: "Innovation", blurb: "From startup ideas to secure systems.", events: [
+    { slug: "startup-weekend", t: "Startup Weekend", desc: "Build startup ideas and pitch them to mentors.", difficulty: "Intermediate" },
+    { slug: "innovation-expo", t: "Innovation Expo", desc: "Showcase innovative technical projects.", difficulty: "Beginner" },
+    { slug: "founder-fireside", t: "Founder Fireside", desc: "Interactive discussions with startup founders and entrepreneurs.", difficulty: "Beginner" },
+    { slug: "cyber-awareness", t: "Cyber Awareness", desc: "Learn safe digital practices and cybersecurity awareness.", difficulty: "Beginner" },
+    { slug: "cyber-security-fundamentals", t: "Cyber Security Fundamentals", desc: "Introduction to ethical hacking and cybersecurity concepts.", difficulty: "Intermediate" },
+  ]},
+  { key: "data", name: "Data Science Track", tag: "Data Science", blurb: "Analyze, model, visualize and automate with data.", events: [
+    { slug: "data-detective", t: "Data Detective", desc: "Real-world data analysis challenge.", difficulty: "Intermediate" },
+    { slug: "model-masters", t: "Model Masters", desc: "Machine learning competition.", difficulty: "Advanced" },
+    { slug: "sql-game", t: "SQL Game", desc: "Interactive SQL challenge with increasing difficulty.", difficulty: "Beginner" },
+    { slug: "vizverse", t: "VizVerse", desc: "Create insightful data visualizations.", difficulty: "Intermediate" },
+    { slug: "ai-labs", t: "AI Labs", desc: "Hands-on AI and Machine Learning workshops.", difficulty: "Advanced" },
+  ]},
 ];
+
+function EventCalendar() {
+  const [rows, setRows] = useState<LiveEvent[]>([]);
+  const [cursor, setCursor] = useState(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); });
+  const [selectedKey, setSelectedKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.from("events").select("*").order("event_date", { ascending: true })
+      .then(({ data }) => setRows((data as LiveEvent[]) || []));
+  }, []);
+
+  const byDate = useMemo(() => {
+    const m = new Map<string, LiveEvent[]>();
+    for (const e of rows) {
+      if (!e.event_date) continue;
+      const k = e.event_date; // yyyy-mm-dd
+      if (!m.has(k)) m.set(k, []);
+      m.get(k)!.push(e);
+    }
+    return m;
+  }, [rows]);
+
+  const year = cursor.getFullYear();
+  const month = cursor.getMonth();
+  const monthName = cursor.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+  const firstDow = new Date(year, month, 1).getDay(); // 0=Sun
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const today = new Date();
+  const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
+  function keyFor(day: number) {
+    return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  }
+
+  const cells: (number | null)[] = [];
+  for (let i = 0; i < firstDow; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+  while (cells.length % 7 !== 0) cells.push(null);
+
+  const selected = selectedKey ? byDate.get(selectedKey) ?? [] : [];
+
+  return (
+    <section className="mt-14">
+      <div className="grid gap-8 lg:grid-cols-[1.4fr_1fr] lg:items-start">
+        <div className="rounded-2xl border-[1.5px] border-black bg-white p-5 shadow-[6px_6px_0_0_rgba(17,17,17,0.9)]">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs font-medium text-accent">Live Calendar</span>
+              <h3 className="font-display text-2xl font-bold">{monthName}</h3>
+            </div>
+            <div className="flex items-center gap-2">
+              <button onClick={() => setCursor(new Date(year, month - 1, 1))} className="rounded-full border-[1.5px] border-black bg-white px-3 py-1 text-sm hover:bg-secondary">←</button>
+              <button onClick={() => { const n = new Date(); setCursor(new Date(n.getFullYear(), n.getMonth(), 1)); }} className="rounded-full border-[1.5px] border-black bg-white px-3 py-1 text-xs">Today</button>
+              <button onClick={() => setCursor(new Date(year, month + 1, 1))} className="rounded-full border-[1.5px] border-black bg-white px-3 py-1 text-sm hover:bg-secondary">→</button>
+            </div>
+          </div>
+
+          <div className="mt-4 grid grid-cols-7 gap-1 text-center text-[11px] font-mono uppercase tracking-wider text-muted-foreground">
+            {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map((d) => <div key={d} className="py-1">{d}</div>)}
+          </div>
+          <div className="mt-1 grid grid-cols-7 gap-1">
+            {cells.map((d, i) => {
+              if (!d) return <div key={i} className="aspect-square" />;
+              const k = keyFor(d);
+              const evs = byDate.get(k);
+              const isToday = k === todayKey;
+              const isSelected = k === selectedKey;
+              const hasEvents = evs && evs.length > 0;
+              return (
+                <button
+                  key={i}
+                  onClick={() => setSelectedKey(hasEvents ? k : null)}
+                  onMouseEnter={() => hasEvents && setSelectedKey(k)}
+                  className={`group relative aspect-square rounded-lg border text-left transition-all
+                    ${hasEvents ? "border-black bg-primary/10 hover:bg-primary/20 cursor-pointer" : "border-border/60 bg-white text-muted-foreground"}
+                    ${isSelected ? "ring-2 ring-black" : ""}
+                    ${isToday ? "outline outline-2 outline-accent" : ""}`}
+                >
+                  <span className="absolute left-1.5 top-1 text-xs font-semibold">{d}</span>
+                  {hasEvents && (
+                    <span className="absolute bottom-1 left-1/2 flex -translate-x-1/2 gap-0.5">
+                      {evs!.slice(0, 3).map((_, j) => <span key={j} className="h-1.5 w-1.5 rounded-full bg-primary" />)}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+            <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-primary" /> Programme scheduled</span>
+            <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm outline outline-2 outline-accent" /> Today</span>
+            <span>Hover or tap a highlighted date to preview the programme.</span>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border-[1.5px] border-black bg-white p-5 shadow-[6px_6px_0_0_rgba(17,17,17,0.9)]">
+          <div className="text-xs font-medium text-accent">Programme details</div>
+          <h3 className="mt-1 font-display text-xl font-bold">
+            {selectedKey ? new Date(selectedKey).toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }) : "Pick a highlighted date"}
+          </h3>
+          {selected.length === 0 && (
+            <div className="mt-4 flex flex-col items-center text-center">
+              <img src={sketchCalendar} alt="" aria-hidden loading="lazy" className="w-40 opacity-80" />
+              <p className="mt-2 text-sm text-muted-foreground">Highlighted dots mark days with events. Hover a date on the calendar to see what's happening.</p>
+            </div>
+          )}
+          <ul className="mt-4 space-y-3">
+            {selected.map((e) => (
+              <li key={e.id} className="rounded-xl border-[1.5px] border-black bg-white p-4">
+                {e.poster_url && <img src={e.poster_url} alt={e.title} className="mb-3 h-32 w-full rounded-lg object-cover" />}
+                <div className="text-[11px] font-mono uppercase tracking-wider text-accent">{e.category || "Event"} · {e.status}</div>
+                <h4 className="mt-0.5 font-display text-lg font-semibold">{e.title}</h4>
+                {e.description && <p className="mt-1 text-sm text-muted-foreground">{e.description}</p>}
+                <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                  {e.start_time && <span>🕒 {e.start_time}{e.end_time ? ` – ${e.end_time}` : ""}</span>}
+                  {e.venue && <span>📍 {e.venue}</span>}
+                  {e.organizer && <span>👤 {e.organizer}</span>}
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Link to="/dashboard" className="rounded-full bg-primary px-4 py-1.5 text-xs font-semibold text-primary-foreground hover:opacity-90">Register (member)</Link>
+                  {e.registration_link && <a href={e.registration_link} target="_blank" rel="noreferrer" className="rounded-full border-[1.5px] border-black px-4 py-1.5 text-xs font-medium hover:bg-secondary">External link ↗</a>}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </section>
+  );
+}
 
 function Events() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:px-8">
-      <span className="text-sm font-medium text-primary">Events</span>
-      <h1 className="mt-2 font-display text-4xl font-bold sm:text-5xl">What's happening at DATYX</h1>
-      <p className="mt-4 max-w-2xl text-muted-foreground">
-        Explore events across every DATYX track — Tech, Workshops & Hackathons, Innovation & Cyber Security, and Data Science.
-      </p>
-
-      <img src={sketchEvents} alt="Doodle of a calendar and presentation" loading="lazy" width={1024} height={768} className="mx-auto mt-8 w-full max-w-md" />
-
-      <div className="mt-6 flex flex-wrap gap-2">
-        {tracks.map((tr) => (
-          <a key={tr.key} href={`#${tr.key}`} className="rounded-full border border-border bg-surface px-3 py-1 text-xs font-medium text-muted-foreground hover:border-primary/40 hover:text-foreground">
-            {tr.name}
-          </a>
-        ))}
-        <Link to="/entertainment" className="rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs font-medium text-primary hover:bg-primary/20">
-          Every Saturday →
-        </Link>
+      <div className="grid gap-10 lg:grid-cols-[1.3fr_1fr] lg:items-center">
+        <div>
+          <span className="text-sm font-medium text-primary">Events</span>
+          <h1 className="mt-2 font-display text-4xl font-bold sm:text-5xl">What's happening at DATYX</h1>
+          <p className="mt-4 max-w-xl text-muted-foreground">
+            Explore events across every DATYX track — Tech, Workshops & Hackathons, Innovation & Cyber Security, and Data Science. Open the calendar below to see what's on this month.
+          </p>
+          <div className="mt-6 flex flex-wrap gap-2">
+            {tracks.map((tr) => (
+              <a key={tr.key} href={`#${tr.key}`} className="rounded-full border-[1.5px] border-black bg-white px-3 py-1 text-xs font-medium hover:bg-secondary">{tr.name}</a>
+            ))}
+            <Link to="/entertainment" className="rounded-full border-[1.5px] border-black bg-black px-3 py-1 text-xs font-medium text-white">Every Saturday →</Link>
+          </div>
+        </div>
+        <img src={sketchEvents} alt="Doodle of a calendar and presentation" loading="lazy" width={1024} height={768} className="w-full max-w-sm justify-self-end" />
       </div>
 
-      <LiveEvents />
+      <EventCalendar />
 
       {tracks.map((tr) => (
         <section id={tr.key} key={tr.key} className="mt-14 scroll-mt-24">
@@ -137,26 +216,18 @@ function Events() {
               <p className="mt-1 text-sm text-muted-foreground">{tr.blurb}</p>
             </div>
           </div>
-
           <div className="mt-6 space-y-4">
             {tr.events.map((e) => (
-              <div key={e.slug} className="group flex flex-col gap-4 rounded-xl border border-border bg-surface p-6 transition-all hover:border-primary/40 sm:flex-row sm:items-center">
+              <div key={e.slug} className="group flex flex-col gap-4 rounded-xl border-[1.5px] border-black bg-white p-6 transition-all hover:shadow-[4px_4px_0_0_rgba(17,17,17,0.9)] sm:flex-row sm:items-center">
                 <div className="w-40 shrink-0">
                   <div className="text-sm font-mono text-primary">{tr.tag}</div>
-                  <span className="mt-1 inline-flex rounded-full border border-border bg-background px-2 py-0.5 text-xs text-muted-foreground">
-                    {e.difficulty}
-                  </span>
+                  <span className="mt-1 inline-flex rounded-full border border-border bg-background px-2 py-0.5 text-xs text-muted-foreground">{e.difficulty}</span>
                 </div>
                 <div className="flex-1">
                   <h3 className="font-display text-lg font-semibold">{e.t}</h3>
                   <p className="mt-1 text-sm text-muted-foreground">{e.desc}</p>
                 </div>
-                <Link
-                  to="/auth"
-                  className="rounded-md border border-primary/40 px-4 py-2 text-sm font-medium text-primary hover:bg-primary/10"
-                >
-                  Register
-                </Link>
+                <Link to="/auth" className="rounded-full border-[1.5px] border-black bg-white px-4 py-2 text-sm font-medium hover:bg-secondary">Register</Link>
               </div>
             ))}
           </div>
