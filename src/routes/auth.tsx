@@ -116,7 +116,7 @@ function Auth() {
       }
       if (result.redirected) return; // browser redirects
       // popup flow — session already set
-      navigate({ to: "/dashboard", replace: true });
+      await afterLogin();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Google sign-in failed");
     } finally {
