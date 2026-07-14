@@ -3,6 +3,7 @@ import { useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import sketchContact from "@/assets/sketch-contact.png";
 
 
 export const Route = createFileRoute("/contact")({
@@ -73,6 +74,8 @@ function Contact() {
       <p className="mt-4 max-w-2xl text-muted-foreground">
         Partnerships, guest talks, sponsorships or general questions — reach a coordinator, a track lead, or send us a message.
       </p>
+
+      <img src={sketchContact} alt="Doodle person saying hello with an envelope" loading="lazy" width={1024} height={768} className="mx-auto mt-8 w-full max-w-sm" />
 
       <section className="mt-12 grid gap-6 md:grid-cols-2">
         <div className="rounded-xl border border-border bg-surface p-6">

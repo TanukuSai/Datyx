@@ -93,6 +93,8 @@ function Team() {
         Faculty coordinators and student track leads shaping every workshop, hackathon and Saturday activity at DATYX.
       </p>
 
+      <img src={sketchTeam} alt="Doodle of team members waving" loading="lazy" width={1024} height={768} className="mx-auto mt-10 w-full max-w-3xl" />
+
       <Section label="Faculty" title="Faculty Coordinators" items={faculty} />
       <Section label="Tracks" title="Student Track Leads" sub="Each lead owns a track and the events that run under it." items={trackLeads} />
       <Section label="Creative & Marketing" title="Creative & Marketing Leads" sub="Leads driving creative tracks and club marketing." items={creativeLeads} />

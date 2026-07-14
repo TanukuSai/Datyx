@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import sketchFun from "@/assets/sketch-fun.png";
 
 export const Route = createFileRoute("/entertainment")({
   head: () => ({
@@ -38,6 +39,8 @@ function Entertainment() {
       <p className="mt-4 max-w-2xl text-muted-foreground">
         A recurring lineup of activities that keep the club energetic — play, build, pitch and code together. All activities run every Saturday.
       </p>
+
+      <img src={sketchFun} alt="Friends playing music and games" loading="lazy" width={1024} height={768} className="mx-auto mt-10 w-full max-w-2xl" />
 
       <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {activities.map((a) => (

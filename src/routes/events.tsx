@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import sketchEvents from "@/assets/sketch-events.png";
 
 type LiveEvent = { id: string; title: string; description: string | null; event_date: string | null; start_time: string | null; venue: string | null; category: string | null; registration_link: string | null; status: string; poster_url: string | null };
 
@@ -111,6 +112,8 @@ function Events() {
       <p className="mt-4 max-w-2xl text-muted-foreground">
         Explore events across every DATYX track — Tech, Workshops & Hackathons, Innovation & Cyber Security, and Data Science.
       </p>
+
+      <img src={sketchEvents} alt="Doodle of a calendar and presentation" loading="lazy" width={1024} height={768} className="mx-auto mt-8 w-full max-w-md" />
 
       <div className="mt-6 flex flex-wrap gap-2">
         {tracks.map((tr) => (
