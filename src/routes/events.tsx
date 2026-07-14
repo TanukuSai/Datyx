@@ -97,11 +97,22 @@ function EventCalendar() {
   return (
     <section className="mt-14">
       <div className="grid gap-8 lg:grid-cols-[1.4fr_1fr] lg:items-start">
-        <div className="rounded-2xl border-[1.5px] border-black bg-white p-5 shadow-[6px_6px_0_0_rgba(17,17,17,0.9)]">
-          <div className="flex items-center justify-between">
+        {/* Sketch calendar — the image IS the calendar */}
+        <div className="relative rounded-2xl border-[1.5px] border-black bg-white p-6 shadow-[6px_6px_0_0_rgba(17,17,17,0.9)]">
+          {/* Spiral binding */}
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex gap-3">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <span key={i} className="block h-3 w-3 rounded-full border-[1.5px] border-black bg-white" />
+              ))}
+            </div>
+            <span className="font-display text-2xl">✦</span>
+          </div>
+
+          <div className="flex items-end justify-between border-b-[1.5px] border-dashed border-black/70 pb-3">
             <div>
-              <span className="text-xs font-medium text-accent">Live Calendar</span>
-              <h3 className="font-display text-2xl font-bold">{monthName}</h3>
+              <span className="text-[11px] font-mono uppercase tracking-widest text-accent">Live Calendar</span>
+              <h3 className="font-display text-3xl font-bold leading-none">{monthName}</h3>
             </div>
             <div className="flex items-center gap-2">
               <button onClick={() => setCursor(new Date(year, month - 1, 1))} className="rounded-full border-[1.5px] border-black bg-white px-3 py-1 text-sm hover:bg-secondary">←</button>
@@ -113,7 +124,7 @@ function EventCalendar() {
           <div className="mt-4 grid grid-cols-7 gap-1 text-center text-[11px] font-mono uppercase tracking-wider text-muted-foreground">
             {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map((d) => <div key={d} className="py-1">{d}</div>)}
           </div>
-          <div className="mt-1 grid grid-cols-7 gap-1">
+          <div className="mt-1 grid grid-cols-7 gap-[6px]">
             {cells.map((d, i) => {
               if (!d) return <div key={i} className="aspect-square" />;
               const k = keyFor(d);
@@ -126,26 +137,27 @@ function EventCalendar() {
                   key={i}
                   onClick={() => setSelectedKey(hasEvents ? k : null)}
                   onMouseEnter={() => hasEvents && setSelectedKey(k)}
-                  className={`group relative aspect-square rounded-lg border text-left transition-all
-                    ${hasEvents ? "border-black bg-primary/10 hover:bg-primary/20 cursor-pointer" : "border-border/60 bg-white text-muted-foreground"}
-                    ${isSelected ? "ring-2 ring-black" : ""}
-                    ${isToday ? "outline outline-2 outline-accent" : ""}`}
+                  className={`group relative aspect-square rounded-md border-[1.5px] text-left transition-all
+                    ${hasEvents ? "border-black bg-yellow-100 hover:bg-yellow-200 cursor-pointer shadow-[2px_2px_0_0_rgba(17,17,17,0.9)]" : "border-black/30 bg-white text-muted-foreground"}
+                    ${isSelected ? "ring-2 ring-black -translate-y-0.5" : ""}
+                    ${isToday ? "outline outline-2 outline-offset-1 outline-black" : ""}`}
                 >
                   <span className="absolute left-1.5 top-1 text-xs font-semibold">{d}</span>
                   {hasEvents && (
                     <span className="absolute bottom-1 left-1/2 flex -translate-x-1/2 gap-0.5">
-                      {evs!.slice(0, 3).map((_, j) => <span key={j} className="h-1.5 w-1.5 rounded-full bg-primary" />)}
+                      {evs!.slice(0, 3).map((_, j) => <span key={j} className="h-1.5 w-1.5 rounded-full bg-black" />)}
                     </span>
                   )}
+                  {isToday && <span className="absolute -right-1 -top-2 font-display text-sm">✧</span>}
                 </button>
               );
             })}
           </div>
 
-          <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-            <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-primary" /> Programme scheduled</span>
-            <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm outline outline-2 outline-accent" /> Today</span>
-            <span>Hover or tap a highlighted date to preview the programme.</span>
+          <div className="mt-4 flex flex-wrap items-center gap-3 border-t-[1.5px] border-dashed border-black/70 pt-3 text-xs text-muted-foreground">
+            <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-black" /> Programme scheduled</span>
+            <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm outline outline-2 outline-black" /> Today</span>
+            <span>Hover or tap a highlighted date.</span>
           </div>
         </div>
 
