@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import sketchCommunity from "@/assets/sketch-community.png";
 
 export const Route = createFileRoute("/about")({
   head: () => ({
@@ -20,6 +21,10 @@ function About() {
       <p className="mt-6 text-lg text-muted-foreground">
         DATYX is a student-run data science club with one mission: help every member go from curious to confident with data. We host workshops, ship open-source projects, run gamified challenges and connect students with mentors and industry.
       </p>
+
+      <img src={sketchCommunity} alt="Community learning together" loading="lazy" width={1024} height={768} className="mx-auto mt-12 w-full max-w-2xl" />
+
+
 
       <div className="mt-16 grid gap-6 md:grid-cols-3">
         {[

@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import sketchCoder from "@/assets/sketch-coder.png";
 import { useEffect, useState } from "react";
 import { Lock, Check } from "lucide-react";
 import { LEVELS, LEVEL_COUNT_TOTAL } from "@/lib/sql-quest/levels";
@@ -55,8 +56,10 @@ function Game() {
             )}
             <a href="#tiers" className="rounded-lg border border-border bg-surface-elevated px-6 py-3 text-sm font-semibold hover:bg-secondary">See the tiers</a>
           </div>
+          <img src={sketchCoder} alt="Doodle of a coder at a computer" loading="lazy" width={1024} height={768} className="mx-auto mt-12 w-full max-w-xl" />
         </div>
       </section>
+
 
       <section id="tiers" className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="grid gap-6 md:grid-cols-2">

@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Database, Trophy, Zap, Users, Code2, LineChart } from "lucide-react";
 import { useEffect, useState } from "react";
 import logoAsset from "@/assets/datyx-logo.png.asset.json";
+import sketchCommunity from "@/assets/sketch-community.png";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/")({
@@ -52,6 +53,7 @@ function Home() {
               <Stat n="0" l="Members" />
               <Stat n="0" l="Live Projects" />
             </div>
+            <img src={sketchCommunity} alt="Students collaborating around a laptop" width={1024} height={768} className="mx-auto mt-12 w-full max-w-2xl" />
           </div>
         </div>
       </section>
