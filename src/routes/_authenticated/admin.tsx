@@ -37,7 +37,7 @@ function AdminLayout() {
 
   if (checking || !isAdmin) return <div className="min-h-[60vh] px-6 py-20 text-sm text-muted-foreground">Checking admin access…</div>;
 
-  const nav = [
+  const nav: { to: string; label: string; exact?: boolean }[] = [
     { to: "/admin", label: "Dashboard", exact: true },
     { to: "/admin/events", label: "Events" },
     { to: "/admin/team", label: "Team" },
@@ -45,7 +45,7 @@ function AdminLayout() {
     { to: "/admin/announcements", label: "Announcements" },
     { to: "/admin/gallery", label: "Gallery" },
     { to: "/admin/users", label: "Users" },
-  ] as const;
+  ];
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
