@@ -1,4 +1,40 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+
+type LiveEvent = { id: string; title: string; description: string | null; event_date: string | null; start_time: string | null; venue: string | null; category: string | null; registration_link: string | null; status: string; poster_url: string | null };
+
+function LiveEvents() {
+  const [rows, setRows] = useState<LiveEvent[]>([]);
+  useEffect(() => {
+    supabase.from("events").select("*").in("status", ["upcoming", "live"]).order("event_date", { ascending: true }).then(({ data }) => setRows((data as LiveEvent[]) || []));
+  }, []);
+  if (rows.length === 0) return null;
+  return (
+    <section className="mt-10">
+      <span className="text-sm font-medium text-accent">Live from Admin</span>
+      <h2 className="mt-1 font-display text-2xl font-bold sm:text-3xl">Upcoming & Live Events</h2>
+      <div className="mt-6 grid gap-4 sm:grid-cols-2">
+        {rows.map((e) => (
+          <div key={e.id} className="rounded-xl border border-border bg-surface p-5 shadow-card">
+            {e.poster_url && <img src={e.poster_url} alt={e.title} className="mb-3 h-40 w-full rounded-lg object-cover" />}
+            <div className="text-xs text-accent">{e.category || "Event"} · {e.status}</div>
+            <h3 className="mt-1 font-display text-lg font-semibold">{e.title}</h3>
+            {e.description && <p className="mt-1 text-sm text-muted-foreground">{e.description}</p>}
+            <div className="mt-2 text-xs text-muted-foreground">
+              {e.event_date && <span>{e.event_date}</span>}{e.start_time && <span> · {e.start_time}</span>}{e.venue && <span> · {e.venue}</span>}
+            </div>
+            <div className="mt-3 flex gap-2">
+              <Link to="/dashboard" className="rounded-full bg-primary px-4 py-1.5 text-xs font-semibold text-primary-foreground hover:opacity-90">Register (member)</Link>
+              {e.registration_link && <a href={e.registration_link} target="_blank" rel="noreferrer" className="rounded-full border border-border px-4 py-1.5 text-xs font-medium hover:bg-secondary">External link ↗</a>}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 
 export const Route = createFileRoute("/events")({
   head: () => ({
@@ -86,6 +122,8 @@ function Events() {
           Every Saturday →
         </Link>
       </div>
+
+      <LiveEvents />
 
       {tracks.map((tr) => (
         <section id={tr.key} key={tr.key} className="mt-14 scroll-mt-24">
