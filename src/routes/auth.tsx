@@ -39,10 +39,21 @@ function Auth() {
   const [verifySent, setVerifySent] = useState<string | null>(null);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/dashboard", replace: true });
+    supabase.auth.getSession().then(async ({ data }) => {
+      if (!data.session) return;
+      const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", data.session.user.id);
+      const isAdmin = roles?.some((r) => r.role === "admin");
+      navigate({ to: isAdmin ? "/admin" : "/dashboard", replace: true });
     });
   }, [navigate]);
+
+  async function afterLogin() {
+    const { data: sess } = await supabase.auth.getUser();
+    if (!sess.user) return;
+    const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", sess.user.id);
+    const isAdmin = roles?.some((r) => r.role === "admin");
+    navigate({ to: isAdmin ? "/admin" : "/dashboard", replace: true });
+  }
 
   function validate(): boolean {
     const errs: Record<string, string> = {};
@@ -82,7 +93,7 @@ function Auth() {
         });
         if (error) throw error;
         toast.success("Welcome back!");
-        navigate({ to: "/dashboard", replace: true });
+        await afterLogin();
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Something went wrong";
