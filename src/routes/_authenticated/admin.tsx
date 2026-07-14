@@ -63,7 +63,7 @@ function AdminLayout() {
             {nav.map((n) => {
               const active = n.exact ? location.pathname === n.to : location.pathname.startsWith(n.to);
               return (
-                <Link key={n.to} to={n.to} className={`rounded-full px-3 py-1.5 text-sm font-medium ${active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}>
+                <Link key={n.to} to={n.to as "/admin"} className={`rounded-full px-3 py-1.5 text-sm font-medium ${active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}>
                   {n.label}
                 </Link>
               );
