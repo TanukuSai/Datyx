@@ -45,15 +45,19 @@ function About() {
         ))}
       </div>
 
-      <div className="mt-16 rounded-xl border border-border bg-surface p-8">
-        <h2 className="font-display text-2xl font-bold">Our tracks</h2>
-        <ul className="mt-4 space-y-3 text-muted-foreground">
-          <li><strong className="text-foreground">SQL & Analytics</strong> — 100-level SQL Quest + BI tools.</li>
-          <li><strong className="text-foreground">Python & ML</strong> — from pandas to scikit-learn to deep learning.</li>
-          <li><strong className="text-foreground">Data Engineering</strong> — pipelines, warehouses and modern data stack.</li>
-          <li><strong className="text-foreground">Applied AI</strong> — LLMs, RAG and shipping AI products.</li>
-        </ul>
+      <div className="mt-16 grid gap-8 rounded-xl border-[1.5px] border-black bg-white p-8 md:grid-cols-[1fr_1.3fr] md:items-center">
+        <img src={sketchThink} alt="Doodle of a student with a laptop and a lightbulb" loading="lazy" className="w-full max-w-xs justify-self-center" />
+        <div>
+          <h2 className="font-display text-2xl font-bold">Our tracks</h2>
+          <ul className="mt-4 space-y-3 text-muted-foreground">
+            <li><strong className="text-foreground">SQL & Analytics</strong> — 100-level SQL Quest + BI tools.</li>
+            <li><strong className="text-foreground">Python & ML</strong> — from pandas to scikit-learn to deep learning.</li>
+            <li><strong className="text-foreground">Data Engineering</strong> — pipelines, warehouses and modern data stack.</li>
+            <li><strong className="text-foreground">Applied AI</strong> — LLMs, RAG and shipping AI products.</li>
+          </ul>
+        </div>
       </div>
+
     </div>
   );
 }
