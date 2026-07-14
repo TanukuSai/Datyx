@@ -4,6 +4,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import sketchContact from "@/assets/sketch-contact.png";
+import sketchFeedback from "@/assets/sketch-feedback.png";
 
 
 export const Route = createFileRoute("/contact")({
