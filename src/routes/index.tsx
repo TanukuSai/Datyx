@@ -25,50 +25,39 @@ function Home() {
     <div>
       {/* Hero */}
       <section className="relative overflow-hidden bg-hero">
-        <div
+        <img
+          src={sketchCommunity}
+          alt=""
           aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-[0.18]"
-          style={{
-            backgroundImage: `url(${sketchCommunity})`,
-            backgroundRepeat: "repeat",
-            backgroundSize: "420px auto",
-          }}
+          className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-[0.18]"
         />
-        <div className="absolute inset-0 bg-grid opacity-40" />
+        <div className="absolute inset-0 bg-grid opacity-30" />
         <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8 lg:py-32">
-          <div className="mx-auto max-w-3xl">
-            <div className="relative rounded-[28px] border-[1.5px] border-black bg-white/80 px-6 py-12 text-center shadow-[6px_6px_0_0_#111111] backdrop-blur-sm sm:px-10 sm:py-14">
-              {/* sketchy corner starbursts */}
-              <span aria-hidden className="absolute -left-3 -top-3 text-2xl">✦</span>
-              <span aria-hidden className="absolute -right-3 -top-3 text-2xl">✧</span>
-              <span aria-hidden className="absolute -bottom-3 -left-3 text-2xl">✧</span>
-              <span aria-hidden className="absolute -bottom-3 -right-3 text-2xl">✦</span>
-
-              <img src={logoAsset.url} alt="DATYX Data Science Club" className="mx-auto mb-6 h-24 w-24 rounded-full bg-white shadow-glow ring-2 ring-primary/40" />
-              <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
-                Future Innovations · Data Science Club
-              </span>
-              <h1 className="mt-6 font-display text-5xl font-bold leading-[1.05] sm:text-6xl lg:text-7xl">
-                Turn data into <span className="text-gradient">superpower</span>.
-              </h1>
-              <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
-                DATYX is a student community where you master SQL, Python and ML through gamified challenges, real projects and weekly workshops.
-              </p>
-              <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-                <Link to="/game" className="rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground hover:opacity-90">
-                  🎮 Play SQL Quest
-                </Link>
-                <Link to="/auth" className="rounded-full border-[1.5px] border-black bg-white px-6 py-3 text-sm font-semibold hover:bg-secondary">
-                  Join the club →
-                </Link>
-              </div>
-              <div className="mt-10 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm text-muted-foreground">
-                <Stat n="0" l="Workshops" />
-                <Stat n="0" l="SQL Games" />
-                <Stat n="0" l="Members" />
-                <Stat n="0" l="Live Projects" />
-              </div>
+          <div className="mx-auto max-w-3xl text-center">
+            <img src={logoAsset.url} alt="DATYX Data Science Club" className="mx-auto mb-6 h-24 w-24 rounded-full bg-white shadow-glow ring-2 ring-primary/40" />
+            <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
+              Future Innovations · Data Science Club
+            </span>
+            <h1 className="mt-6 font-display text-5xl font-bold leading-[1.05] sm:text-6xl lg:text-7xl">
+              Turn data into <span className="text-gradient">superpower</span>.
+            </h1>
+            <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
+              DATYX is a student community where you master SQL, Python and ML through gamified challenges, real projects and weekly workshops.
+            </p>
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+              <Link to="/game" className="rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground hover:opacity-90">
+                🎮 Play SQL Quest
+              </Link>
+              <Link to="/auth" className="rounded-full border-[1.5px] border-black bg-white px-6 py-3 text-sm font-semibold hover:bg-secondary">
+                Join the club →
+              </Link>
+            </div>
+            <div className="mt-10 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm text-muted-foreground">
+              <Stat n="0" l="Workshops" />
+              <Stat n="0" l="SQL Games" />
+              <Stat n="0" l="Members" />
+              <Stat n="0" l="Live Projects" />
             </div>
           </div>
         </div>

@@ -4,6 +4,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import sketchContact from "@/assets/sketch-contact.png";
+import sketchFeedback from "@/assets/sketch-feedback.png";
 
 
 export const Route = createFileRoute("/contact")({
@@ -121,6 +122,14 @@ function Contact() {
 
       <form onSubmit={submit} className="mt-10 space-y-5 rounded-xl border border-border bg-surface p-8">
         <h2 className="font-display text-lg font-semibold">Send us a message</h2>
+        <img
+          src={sketchFeedback}
+          alt="Three hand-drawn students with speech bubbles showing a heart, a neutral face, and a thumbs down"
+          loading="lazy"
+          width={1024}
+          height={1024}
+          className="mx-auto w-full max-w-md"
+        />
         <Field label="Name" error={errors.name}>
           <input value={state.name} onChange={(e) => setState({ ...state, name: e.target.value })} maxLength={100} className="input" />
         </Field>
