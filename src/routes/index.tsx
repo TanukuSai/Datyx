@@ -25,13 +25,16 @@ function Home() {
     <div>
       {/* Hero */}
       <section className="relative overflow-hidden bg-hero">
-        <div className="absolute inset-0 bg-grid opacity-70" />
-        <img
-          src={sketchCommunity}
-          alt=""
+        <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 m-auto h-full w-full max-w-4xl object-contain opacity-[0.08]"
+          className="pointer-events-none absolute inset-0 opacity-[0.18]"
+          style={{
+            backgroundImage: `url(${sketchCommunity})`,
+            backgroundRepeat: "repeat",
+            backgroundSize: "420px auto",
+          }}
         />
+        <div className="absolute inset-0 bg-grid opacity-40" />
         <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8 lg:py-32">
           <div className="mx-auto max-w-3xl">
             <div className="relative rounded-[28px] border-[1.5px] border-black bg-white/80 px-6 py-12 text-center shadow-[6px_6px_0_0_#111111] backdrop-blur-sm sm:px-10 sm:py-14">
