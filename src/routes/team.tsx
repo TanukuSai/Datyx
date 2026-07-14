@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import sketchTeam from "@/assets/sketch-team.png";
 
 export const Route = createFileRoute("/team")({
   head: () => ({
