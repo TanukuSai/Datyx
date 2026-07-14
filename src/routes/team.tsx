@@ -40,6 +40,13 @@ const trackLeads = [
   },
 ];
 
+const creativeLeads = [
+  { n: "PONAGANTI MANUPRIYA", r: "Interactive Canvas Lead", b: "Leads the Interactive Canvas track — creative digital experiences and design experiments." },
+  { n: "DINGARI MANOGNA", r: "MotionCraft Lead", b: "Leads MotionCraft — motion design, animation and visual storytelling projects." },
+  { n: "SOMISHETTY AKHIL KRISHNA", r: "Sketch to Screen Lead", b: "Leads Sketch to Screen — turning ideas into UI and interactive prototypes." },
+  { n: "SWAMY VIGNESH", r: "Club Marketing Lead", b: "Owns club marketing, outreach and community growth across campus." },
+];
+
 function initials(name: string) {
   return name
     .split(" ")
@@ -87,6 +94,7 @@ function Team() {
 
       <Section label="Faculty" title="Faculty Coordinators" items={faculty} />
       <Section label="Tracks" title="Student Track Leads" sub="Each lead owns a track and the events that run under it." items={trackLeads} />
+      <Section label="Creative & Marketing" title="Creative & Marketing Leads" sub="Leads driving creative tracks and club marketing." items={creativeLeads} />
 
     </div>
   );
