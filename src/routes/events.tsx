@@ -227,9 +227,8 @@ export function EventCalendar({ previewEvents = [], adminPreview = false }: { pr
           </div>
         </div>
 
-        </div>
-
         <div className="rounded-2xl border-[1.5px] border-black bg-white p-5 shadow-[6px_6px_0_0_rgba(17,17,17,0.9)]">
+
           <div className="text-xs font-medium text-accent">Programme details</div>
           <h3 className="mt-1 font-display text-xl font-bold">
             {selectedKey ? new Date(selectedKey).toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }) : "Pick a highlighted date"}
