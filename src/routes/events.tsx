@@ -56,15 +56,20 @@ const tracks: Track[] = [
   ]},
 ];
 
-function EventCalendar() {
+export function EventCalendar({ previewEvents = [], adminPreview = false }: { previewEvents?: LiveEvent[]; adminPreview?: boolean } = {}) {
   const [rows, setRows] = useState<LiveEvent[]>([]);
   const [cursor, setCursor] = useState(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); });
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
+  const [hoverKey, setHoverKey] = useState<string | null>(null);
 
   useEffect(() => {
+    if (adminPreview) return;
     supabase.from("events").select("*").order("event_date", { ascending: true })
       .then(({ data }) => setRows((data as LiveEvent[]) || []));
-  }, []);
+  }, [adminPreview]);
+
+  const allRows = useMemo(() => (adminPreview ? previewEvents : rows), [adminPreview, previewEvents, rows]);
+
 
   const byDate = useMemo(() => {
     const m = new Map<string, LiveEvent[]>();
