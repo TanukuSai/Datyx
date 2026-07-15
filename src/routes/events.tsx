@@ -3,6 +3,8 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import sketchEvents from "@/assets/sketch-events.png";
 import sketchCalendar from "@/assets/sketch-calendar.png";
+import sketchStudent from "@/assets/sketch-student-easel.png";
+
 
 type LiveEvent = {
   id: string; title: string; description: string | null; event_date: string | null;
