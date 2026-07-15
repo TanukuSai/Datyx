@@ -28,9 +28,9 @@ function Home() {
       {/* Hero */}
       <section className="relative overflow-hidden bg-hero">
         <div className="absolute inset-0 bg-grid opacity-20" />
-        <div className="relative mx-auto grid max-w-7xl gap-10 px-4 py-20 sm:px-6 lg:grid-cols-[1.15fr_1fr] lg:items-center lg:gap-6 lg:px-8 lg:py-28">
-          <div className="text-center lg:text-left">
-            <img src={logoAsset.url} alt="DATYX Data Science Club" className="mb-6 h-20 w-20 rounded-full bg-white shadow-glow ring-2 ring-primary/40 mx-auto lg:mx-0" />
+        <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-4 py-20 sm:px-6 lg:grid-cols-2 lg:gap-12 lg:px-8 lg:py-28">
+          <div className="mx-auto max-w-xl text-center lg:mx-0 lg:text-left">
+            <img src={logoAsset.url} alt="DATYX Data Science Club" className="mx-auto mb-6 h-20 w-20 rounded-full bg-white shadow-glow ring-2 ring-primary/40 lg:mx-0" />
             <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
               Future Innovations · Data Science Club
@@ -38,7 +38,7 @@ function Home() {
             <h1 className="mt-6 font-display text-5xl font-bold leading-[1.05] sm:text-6xl lg:text-7xl">
               Turn data into <span className="text-gradient">superpower</span>.
             </h1>
-            <p className="mt-6 max-w-xl text-lg text-muted-foreground mx-auto lg:mx-0">
+            <p className="mt-6 text-lg text-muted-foreground">
               DATYX is a student community where you master SQL, Python and ML through gamified challenges, real projects and weekly workshops.
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
@@ -56,17 +56,18 @@ function Home() {
               <Stat n="0" l="Live Projects" />
             </div>
           </div>
-          <div className="relative flex justify-center lg:justify-end">
+          <div className="relative mx-auto flex w-full max-w-md items-center justify-center lg:mx-0 lg:max-w-none lg:justify-self-end">
+            <span className="pointer-events-none absolute -left-2 -top-2 font-display text-3xl text-black/70">✦</span>
             <img
               src={sketchCommunity}
               alt="Hand-drawn doodle of students collaborating with data"
               className="w-full max-w-md lg:max-w-lg"
             />
-            <span className="pointer-events-none absolute -left-2 top-6 font-display text-3xl text-black/70">✦</span>
-            <span className="pointer-events-none absolute right-4 bottom-2 font-display text-2xl text-black/60">✧</span>
+            <span className="pointer-events-none absolute -right-1 -bottom-1 font-display text-2xl text-black/60">✧</span>
           </div>
         </div>
       </section>
+
 
       {/* Features */}
       <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
