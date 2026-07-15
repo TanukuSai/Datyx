@@ -1,5 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import sketchTeam from "@/assets/sketch-team.png";
+import { Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/team")({
   head: () => ({
@@ -13,40 +16,14 @@ export const Route = createFileRoute("/team")({
   component: Team,
 });
 
-const faculty = [
-  { n: "CH SAI PRIYA", r: "Faculty Coordinator", b: "Guides DATYX academic direction and student mentorship." },
-  { n: "MARTHINENI SHILPA", r: "Faculty Coordinator", b: "Oversees club initiatives, research and industry collaboration." },
-];
-
-const trackLeads = [
-  {
-    n: "ASHOK VALLABHUNI",
-    r: "Innovation, Entrepreneurship & Cyber Security Lead",
-    b: "Startup Weekend · Innovation Expo · Founder Fireside · Cyber Awareness · Cyber Security Fundamentals",
-  },
-  {
-    n: "SAI POURNAMI",
-    r: "Tech Track Lead",
-    b: "Vertex Hack · CodeForge · DevSprint · Open Source Week",
-  },
-  {
-    n: "SANNITH REDDY",
-    r: "Workshops & Hackathons Lead",
-    b: "Tech Workshops · Hackathons · Tech Treasure Hunt",
-  },
-  {
-    n: "BALU SHALINI",
-    r: "Data Science Track Lead",
-    b: "Data Detective · Model Masters · SQL Game · VizVerse · AI Labs",
-  },
-];
-
-const creativeLeads = [
-  { n: "PONAGANTI MANUPRIYA", r: "Interactive Canvas Lead", b: "Leads the Interactive Canvas track — creative digital experiences and design experiments." },
-  { n: "DINGARI MANOGNA", r: "MotionCraft Lead", b: "Leads MotionCraft — motion design, animation and visual storytelling projects." },
-  { n: "SOMISHETTY AKHIL KRISHNA", r: "Sketch to Screen Lead", b: "Leads Sketch to Screen — turning ideas into UI and interactive prototypes." },
-  { n: "SWAMY VIGNESH", r: "Club Marketing Lead", b: "Owns club marketing, outreach and community growth across campus." },
-];
+type TeamMember = {
+  id: string;
+  name: string;
+  role: string;
+  bio: string;
+  category: "faculty" | "track_lead" | "creative_lead";
+  display_order: number;
+};
 
 function initials(name: string) {
   return name
@@ -71,20 +48,48 @@ function Card({ n, r, b }: { n: string; r: string; b: string }) {
   );
 }
 
-function Section({ label, title, sub, items }: { label: string; title: string; sub?: string; items: { n: string; r: string; b: string }[] }) {
+function Section({ label, title, sub, items }: { label: string; title: string; sub?: string; items: TeamMember[] }) {
   return (
     <section className="mt-14">
       <span className="text-sm font-medium text-primary">{label}</span>
       <h2 className="mt-1 font-display text-2xl font-bold sm:text-3xl">{title}</h2>
       {sub ? <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{sub}</p> : null}
       <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {items.map((m) => <Card key={m.n + m.r} {...m} />)}
+        {items.map((m) => <Card key={m.id} n={m.name} r={m.role} b={m.bio} />)}
       </div>
     </section>
   );
 }
 
 function Team() {
+  const [members, setMembers] = useState<TeamMember[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadTeam() {
+      try {
+        const { data, error } = await supabase
+          .from("team_members")
+          .select("*")
+          .order("display_order", { ascending: true });
+
+        if (error) {
+          throw error;
+        }
+        setMembers((data as TeamMember[]) || []);
+      } catch (err) {
+        console.error("Failed to load team:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadTeam();
+  }, []);
+
+  const faculty = members.filter((m) => m.category === "faculty");
+  const trackLeads = members.filter((m) => m.category === "track_lead");
+  const creativeLeads = members.filter((m) => m.category === "creative_lead");
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:px-8">
       <div className="grid gap-10 md:grid-cols-[1fr_1.2fr] md:items-center">
@@ -98,11 +103,18 @@ function Team() {
         </div>
       </div>
 
-
-      <Section label="Faculty" title="Faculty Coordinators" items={faculty} />
-      <Section label="Tracks" title="Student Track Leads" sub="Each lead owns a track and the events that run under it." items={trackLeads} />
-      <Section label="Creative & Marketing" title="Creative & Marketing Leads" sub="Leads driving creative tracks and club marketing." items={creativeLeads} />
-
+      {loading ? (
+        <div className="mt-20 flex flex-col items-center justify-center gap-2">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <span className="text-sm text-muted-foreground font-mono">Loading team members...</span>
+        </div>
+      ) : (
+        <>
+          {faculty.length > 0 && <Section label="Faculty" title="Faculty Coordinators" items={faculty} />}
+          {trackLeads.length > 0 && <Section label="Tracks" title="Student Track Leads" sub="Each lead owns a track and the events that run under it." items={trackLeads} />}
+          {creativeLeads.length > 0 && <Section label="Creative & Marketing" title="Creative & Marketing Leads" sub="Leads driving creative tracks and club marketing." items={creativeLeads} />}
+        </>
+      )}
     </div>
   );
 }

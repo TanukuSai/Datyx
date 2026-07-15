@@ -41,9 +41,19 @@ function Auth() {
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
       if (!data.session) return;
-      const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", data.session.user.id);
+      const uid = data.session.user.id;
+      const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", uid);
       const isAdmin = roles?.some((r) => r.role === "admin");
-      navigate({ to: isAdmin ? "/admin" : "/dashboard", replace: true });
+      if (isAdmin) {
+        navigate({ to: "/admin", replace: true });
+        return;
+      }
+      const { data: profile } = await supabase.from("profiles").select("id").eq("id", uid).maybeSingle();
+      if (!profile) {
+        navigate({ to: "/register/id", replace: true });
+      } else {
+        navigate({ to: "/dashboard", replace: true });
+      }
     });
   }, [navigate]);
 
@@ -52,7 +62,16 @@ function Auth() {
     if (!sess.user) return;
     const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", sess.user.id);
     const isAdmin = roles?.some((r) => r.role === "admin");
-    navigate({ to: isAdmin ? "/admin" : "/dashboard", replace: true });
+    if (isAdmin) {
+      navigate({ to: "/admin", replace: true });
+      return;
+    }
+    const { data: profile } = await supabase.from("profiles").select("id").eq("id", sess.user.id).maybeSingle();
+    if (!profile) {
+      navigate({ to: "/register/id", replace: true });
+    } else {
+      navigate({ to: "/dashboard", replace: true });
+    }
   }
 
   function validate(): boolean {
@@ -61,10 +80,6 @@ function Auth() {
     if (!em.success) errs.email = em.error.issues[0].message;
     const pw = passwordSchema.safeParse(form.password);
     if (!pw.success) errs.password = pw.error.issues[0].message;
-    if (mode === "signup") {
-      const nm = nameSchema.safeParse(form.name);
-      if (!nm.success) errs.name = nm.error.issues[0].message;
-    }
     setErrors(errs);
     return Object.keys(errs).length === 0;
   }
@@ -75,17 +90,22 @@ function Auth() {
     setLoading(true);
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email: form.email,
           password: form.password,
           options: {
-            emailRedirectTo: `${window.location.origin}/dashboard`,
-            data: { full_name: form.name },
+            emailRedirectTo: `${window.location.origin}/register/id`,
           },
         });
         if (error) throw error;
-        setVerifySent(form.email);
-        toast.success("Verification email sent — please check your inbox.");
+        
+        if (data.session) {
+          toast.success("Account created successfully!");
+          await afterLogin();
+        } else {
+          setVerifySent(form.email);
+          toast.success("Verification email sent — please check your inbox.");
+        }
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email: form.email,
@@ -106,20 +126,15 @@ function Auth() {
   async function google() {
     setLoading(true);
     try {
-      const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/register/id`,
+        },
       });
-      if (result.error) {
-        toast.error(result.error.message || "Google sign-in failed");
-        setLoading(false);
-        return;
-      }
-      if (result.redirected) return; // browser redirects
-      // popup flow — session already set
-      await afterLogin();
+      if (error) throw error;
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Google sign-in failed");
-    } finally {
       setLoading(false);
     }
   }
@@ -160,11 +175,7 @@ function Auth() {
         </div>
 
         <form onSubmit={submit} className="space-y-4">
-          {mode === "signup" && (
-            <Field label="Full name" error={errors.name}>
-              <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} maxLength={80} className="input" autoComplete="name" />
-            </Field>
-          )}
+
           <Field label="Email" error={errors.email}>
             <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} maxLength={200} className="input" autoComplete="email" />
           </Field>

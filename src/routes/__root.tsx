@@ -94,6 +94,7 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setUser(data.session?.user ?? null));
@@ -106,10 +107,32 @@ function RootComponent() {
     return () => sub.subscription.unsubscribe();
   }, [queryClient, router]);
 
+  useEffect(() => {
+    if (!user) {
+      setIsAdmin(false);
+      return;
+    }
+    let active = true;
+    async function checkRole() {
+      try {
+        const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
+        if (active) {
+          setIsAdmin(roles?.some((r) => r.role === "admin") ?? false);
+        }
+      } catch (err) {
+        console.error("Error checking role in root layout:", err);
+      }
+    }
+    checkRole();
+    return () => {
+      active = false;
+    };
+  }, [user]);
+
   return (
     <QueryClientProvider client={queryClient}>
       <div className="min-h-screen flex flex-col">
-        <SiteHeader user={user} />
+        <SiteHeader user={user} isAdmin={isAdmin} />
         <main className="flex-1"><Outlet /></main>
         <SiteFooter />
       </div>
@@ -118,7 +141,7 @@ function RootComponent() {
   );
 }
 
-function SiteHeader({ user }: { user: User | null }) {
+function SiteHeader({ user, isAdmin }: { user: User | null; isAdmin: boolean }) {
   const [open, setOpen] = useState(false);
   const nav = [
     { to: "/", label: "Home" },
@@ -158,7 +181,9 @@ function SiteHeader({ user }: { user: User | null }) {
         <div className="flex items-center gap-2">
           {user ? (
             <>
-              <Link to="/dashboard" className="hidden rounded-md border border-border px-3 py-1.5 text-sm font-medium hover:bg-secondary sm:inline-flex">Dashboard</Link>
+              <Link to={isAdmin ? "/admin" : "/dashboard"} className="hidden rounded-md border border-border px-3 py-1.5 text-sm font-medium hover:bg-secondary sm:inline-flex">
+                {isAdmin ? "Console" : "Dashboard"}
+              </Link>
               <button onClick={signOut} className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90">Sign out</button>
             </>
           ) : (
@@ -177,6 +202,15 @@ function SiteHeader({ user }: { user: User | null }) {
             {nav.map((n) => (
               <Link key={n.to} to={n.to} onClick={() => setOpen(false)} className="rounded-md px-3 py-2 text-sm font-medium hover:bg-secondary">{n.label}</Link>
             ))}
+            {user && (
+              <Link
+                to={isAdmin ? "/admin" : "/dashboard"}
+                onClick={() => setOpen(false)}
+                className="rounded-md px-3 py-2 text-sm font-medium text-accent hover:bg-secondary"
+              >
+                {isAdmin ? "Console" : "Dashboard"}
+              </Link>
+            )}
           </nav>
         </div>
       )}

@@ -170,6 +170,78 @@ export type Database = {
         }
         Relationships: []
       }
+      team_members: {
+        Row: {
+          id: string
+          name: string
+          role: string
+          bio: string
+          category: string
+          display_order: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          role: string
+          bio: string
+          category: string
+          display_order?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          role?: string
+          bio?: string
+          category?: string
+          display_order?: number
+          created_at?: string
+        }
+        Relationships: []
+      }
+      track_events: {
+        Row: {
+          id: string
+          track_key: string
+          track_name: string
+          track_tag: string
+          track_blurb: string
+          slug: string
+          title: string
+          description: string
+          difficulty: string
+          display_order: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          track_key: string
+          track_name: string
+          track_tag: string
+          track_blurb: string
+          slug: string
+          title: string
+          description: string
+          difficulty: string
+          display_order?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          track_key?: string
+          track_name?: string
+          track_tag?: string
+          track_blurb?: string
+          slug?: string
+          title?: string
+          description?: string
+          difficulty?: string
+          display_order?: number
+          created_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

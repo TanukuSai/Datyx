@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import sketchFun from "@/assets/sketch-fun.png";
+import { useAccess } from "@/hooks/useAccess";
 
 export const Route = createFileRoute("/entertainment")({
   head: () => ({
@@ -32,6 +33,7 @@ const activities: Activity[] = [
 ];
 
 function Entertainment() {
+  const { signedIn, hasAccess } = useAccess();
   return (
     <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:px-8">
       <div className="grid gap-10 md:grid-cols-[1.2fr_1fr] md:items-center">
@@ -63,12 +65,28 @@ function Entertainment() {
               </span>
             </div>
 
-            <Link
-              to="/auth"
-              className="mt-5 inline-flex rounded-md border border-primary/40 px-4 py-2 text-sm font-medium text-primary hover:bg-primary/10"
-            >
-              Register
-            </Link>
+            {!signedIn ? (
+              <Link
+                to="/auth"
+                className="mt-5 inline-flex rounded-md border border-primary/40 px-4 py-2 text-sm font-medium text-primary hover:bg-primary/10"
+              >
+                Sign in to register
+              </Link>
+            ) : !hasAccess ? (
+              <Link
+                to="/register/id"
+                className="mt-5 inline-flex rounded-md border border-primary/40 px-4 py-2 text-sm font-medium text-primary hover:bg-primary/10"
+              >
+                Complete registration
+              </Link>
+            ) : (
+              <Link
+                to="/dashboard"
+                className="mt-5 inline-flex rounded-md border border-primary/40 px-4 py-2 text-sm font-medium text-primary hover:bg-primary/10"
+              >
+                Register
+              </Link>
+            )}
           </div>
         ))}
       </div>

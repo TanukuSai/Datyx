@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAccess } from "@/hooks/useAccess";
+import { Loader2 } from "lucide-react";
 import sketchEvents from "@/assets/sketch-events.png";
 import sketchCalendar from "@/assets/sketch-calendar.png";
 import sketchStudent from "@/assets/sketch-student-easel.png";
@@ -25,38 +27,21 @@ export const Route = createFileRoute("/events")({
   component: Events,
 });
 
-type EventItem = { slug: string; t: string; desc: string; difficulty: "Beginner" | "Intermediate" | "Advanced" };
-type Track = { key: string; name: string; tag: string; blurb: string; events: EventItem[] };
-
-const tracks: Track[] = [
-  { key: "tech", name: "Tech Track", tag: "Tech", blurb: "Build, ship and compete on the fundamentals.", events: [
-    { slug: "vertex-hack", t: "Vertex Hack", desc: "24-hour innovation hackathon where students solve real-world problems.", difficulty: "Advanced" },
-    { slug: "codeforge", t: "CodeForge", desc: "Competitive coding contest focusing on algorithms and programming.", difficulty: "Intermediate" },
-    { slug: "devsprint", t: "DevSprint", desc: "Fast-paced web and application development competition.", difficulty: "Intermediate" },
-    { slug: "open-source-week", t: "Open Source Week", desc: "Learn Git, GitHub and contribute to open-source projects.", difficulty: "Beginner" },
-  ]},
-  { key: "workshops", name: "Workshops & Hackathons", tag: "Workshops", blurb: "Hands-on learning and team-based building.", events: [
-    { slug: "tech-workshops", t: "Tech Workshops", desc: "Hands-on learning sessions on trending technologies.", difficulty: "Beginner" },
-    { slug: "hackathons", t: "Hackathons", desc: "Team-based innovation competitions.", difficulty: "Advanced" },
-    { slug: "tech-treasure-hunt", t: "Tech Treasure Hunt", desc: "A fun technical puzzle-solving challenge across multiple rounds.", difficulty: "Intermediate" },
-  ]},
-  { key: "innovation", name: "Innovation & Cyber Security", tag: "Innovation", blurb: "From startup ideas to secure systems.", events: [
-    { slug: "startup-weekend", t: "Startup Weekend", desc: "Build startup ideas and pitch them to mentors.", difficulty: "Intermediate" },
-    { slug: "innovation-expo", t: "Innovation Expo", desc: "Showcase innovative technical projects.", difficulty: "Beginner" },
-    { slug: "founder-fireside", t: "Founder Fireside", desc: "Interactive discussions with startup founders and entrepreneurs.", difficulty: "Beginner" },
-    { slug: "cyber-awareness", t: "Cyber Awareness", desc: "Learn safe digital practices and cybersecurity awareness.", difficulty: "Beginner" },
-    { slug: "cyber-security-fundamentals", t: "Cyber Security Fundamentals", desc: "Introduction to ethical hacking and cybersecurity concepts.", difficulty: "Intermediate" },
-  ]},
-  { key: "data", name: "Data Science Track", tag: "Data Science", blurb: "Analyze, model, visualize and automate with data.", events: [
-    { slug: "data-detective", t: "Data Detective", desc: "Real-world data analysis challenge.", difficulty: "Intermediate" },
-    { slug: "model-masters", t: "Model Masters", desc: "Machine learning competition.", difficulty: "Advanced" },
-    { slug: "sql-game", t: "SQL Game", desc: "Interactive SQL challenge with increasing difficulty.", difficulty: "Beginner" },
-    { slug: "vizverse", t: "VizVerse", desc: "Create insightful data visualizations.", difficulty: "Intermediate" },
-    { slug: "ai-labs", t: "AI Labs", desc: "Hands-on AI and Machine Learning workshops.", difficulty: "Advanced" },
-  ]},
-];
+type TrackEventRow = {
+  id: string;
+  track_key: string;
+  track_name: string;
+  track_tag: string;
+  track_blurb: string;
+  slug: string;
+  title: string;
+  description: string;
+  difficulty: "Beginner" | "Intermediate" | "Advanced";
+  display_order: number;
+};
 
 export function EventCalendar({ previewEvents = [], adminPreview = false }: { previewEvents?: LiveEvent[]; adminPreview?: boolean } = {}) {
+  const { signedIn, hasAccess } = useAccess();
   const [rows, setRows] = useState<LiveEvent[]>([]);
   const [cursor, setCursor] = useState(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); });
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
@@ -200,7 +185,13 @@ export function EventCalendar({ previewEvents = [], adminPreview = false }: { pr
                               </div>
                               {!adminPreview && (
                                 <div className="mt-2 flex flex-wrap gap-2">
-                                  <Link to="/dashboard" className="rounded-full bg-black px-3 py-1 text-[11px] font-semibold text-white hover:opacity-90">Register Now</Link>
+                                  {!signedIn ? (
+                                    <Link to="/auth" className="rounded-full bg-black px-3 py-1 text-[11px] font-semibold text-white hover:opacity-90">Sign in to register</Link>
+                                  ) : !hasAccess ? (
+                                    <Link to="/register/id" className="rounded-full bg-black px-3 py-1 text-[11px] font-semibold text-white hover:opacity-90">Complete registration</Link>
+                                  ) : (
+                                    <Link to="/dashboard" className="rounded-full bg-black px-3 py-1 text-[11px] font-semibold text-white hover:opacity-90">Register Now</Link>
+                                  )}
                                   {e.registration_link && <a href={e.registration_link} target="_blank" rel="noreferrer" className="rounded-full border-[1.5px] border-black px-3 py-1 text-[11px] font-medium hover:bg-secondary">External ↗</a>}
                                 </div>
                               )}
@@ -252,7 +243,13 @@ export function EventCalendar({ previewEvents = [], adminPreview = false }: { pr
                   {e.organizer && <span>👤 {e.organizer}</span>}
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <Link to="/dashboard" className="rounded-full bg-primary px-4 py-1.5 text-xs font-semibold text-primary-foreground hover:opacity-90">Register (member)</Link>
+                  {!signedIn ? (
+                    <Link to="/auth" className="rounded-full bg-primary px-4 py-1.5 text-xs font-semibold text-primary-foreground hover:opacity-90">Sign in to register</Link>
+                  ) : !hasAccess ? (
+                    <Link to="/register/id" className="rounded-full bg-primary px-4 py-1.5 text-xs font-semibold text-primary-foreground hover:opacity-90">Complete registration</Link>
+                  ) : (
+                    <Link to="/dashboard" className="rounded-full bg-primary px-4 py-1.5 text-xs font-semibold text-primary-foreground hover:opacity-90">Register (member)</Link>
+                  )}
                   {e.registration_link && <a href={e.registration_link} target="_blank" rel="noreferrer" className="rounded-full border-[1.5px] border-black px-4 py-1.5 text-xs font-medium hover:bg-secondary">External link ↗</a>}
                 </div>
               </li>
@@ -265,6 +262,64 @@ export function EventCalendar({ previewEvents = [], adminPreview = false }: { pr
 }
 
 function Events() {
+  const { signedIn, hasAccess } = useAccess();
+  const [dbEvents, setDbEvents] = useState<TrackEventRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadTrackEvents() {
+      try {
+        const { data, error } = await supabase
+          .from("track_events")
+          .select("*")
+          .order("display_order", { ascending: true });
+
+        if (error) {
+          throw error;
+        }
+        setDbEvents((data as TrackEventRow[]) || []);
+      } catch (err) {
+        console.error("Failed to load track events:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadTrackEvents();
+  }, []);
+
+  const tracks = useMemo(() => {
+    const trackMap = new Map<string, { key: string; name: string; tag: string; blurb: string; events: any[] }>();
+
+    for (const row of dbEvents) {
+      if (!trackMap.has(row.track_key)) {
+        trackMap.set(row.track_key, {
+          key: row.track_key,
+          name: row.track_name,
+          tag: row.track_tag,
+          blurb: row.track_blurb,
+          events: [],
+        });
+      }
+      trackMap.get(row.track_key)!.events.push({
+        slug: row.slug,
+        t: row.title,
+        desc: row.description,
+        difficulty: row.difficulty,
+      });
+    }
+
+    return Array.from(trackMap.values());
+  }, [dbEvents]);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-2 bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="text-sm text-muted-foreground font-mono">Loading events...</span>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:px-8">
       <div className="grid gap-10 lg:grid-cols-[1.3fr_1fr] lg:items-center">
@@ -306,7 +361,13 @@ function Events() {
                   <h3 className="font-display text-lg font-semibold">{e.t}</h3>
                   <p className="mt-1 text-sm text-muted-foreground">{e.desc}</p>
                 </div>
-                <Link to="/auth" className="rounded-full border-[1.5px] border-black bg-white px-4 py-2 text-sm font-medium hover:bg-secondary">Register</Link>
+                {!signedIn ? (
+                  <Link to="/auth" className="rounded-full border-[1.5px] border-black bg-white px-4 py-2 text-sm font-medium hover:bg-secondary">Sign in to register</Link>
+                ) : !hasAccess ? (
+                  <Link to="/register/id" className="rounded-full border-[1.5px] border-black bg-white px-4 py-2 text-sm font-medium hover:bg-secondary">Complete registration</Link>
+                ) : (
+                  <Link to="/dashboard" className="rounded-full border-[1.5px] border-black bg-white px-4 py-2 text-sm font-medium hover:bg-secondary">Register (member)</Link>
+                )}
               </div>
             ))}
           </div>

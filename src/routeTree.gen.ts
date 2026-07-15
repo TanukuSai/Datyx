@@ -18,9 +18,12 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRegistrationCompleteRouteImport } from './routes/_authenticated/registration-complete'
+import { Route as AuthenticatedPaymentRouteImport } from './routes/_authenticated/payment'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as AuthenticatedRegisterIdRouteImport } from './routes/_authenticated/register.id'
 import { Route as AuthenticatedPlayLevelIdRouteImport } from './routes/_authenticated/play.$levelId'
 import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authenticated/admin.users'
 import { Route as AuthenticatedAdminTeamRouteImport } from './routes/_authenticated/admin.team'
@@ -73,6 +76,17 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRegistrationCompleteRoute =
+  AuthenticatedRegistrationCompleteRouteImport.update({
+    id: '/registration-complete',
+    path: '/registration-complete',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPaymentRoute = AuthenticatedPaymentRouteImport.update({
+  id: '/payment',
+  path: '/payment',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -87,6 +101,11 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
+const AuthenticatedRegisterIdRoute = AuthenticatedRegisterIdRouteImport.update({
+  id: '/register/id',
+  path: '/register/id',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedPlayLevelIdRoute =
   AuthenticatedPlayLevelIdRouteImport.update({
@@ -140,6 +159,8 @@ export interface FileRoutesByFullPath {
   '/team': typeof TeamRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/payment': typeof AuthenticatedPaymentRoute
+  '/registration-complete': typeof AuthenticatedRegistrationCompleteRoute
   '/admin/announcements': typeof AuthenticatedAdminAnnouncementsRoute
   '/admin/events': typeof AuthenticatedAdminEventsRoute
   '/admin/gallery': typeof AuthenticatedAdminGalleryRoute
@@ -147,6 +168,7 @@ export interface FileRoutesByFullPath {
   '/admin/team': typeof AuthenticatedAdminTeamRoute
   '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/play/$levelId': typeof AuthenticatedPlayLevelIdRoute
+  '/register/id': typeof AuthenticatedRegisterIdRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRoutesByTo {
@@ -159,6 +181,8 @@ export interface FileRoutesByTo {
   '/game': typeof GameRoute
   '/team': typeof TeamRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/payment': typeof AuthenticatedPaymentRoute
+  '/registration-complete': typeof AuthenticatedRegistrationCompleteRoute
   '/admin/announcements': typeof AuthenticatedAdminAnnouncementsRoute
   '/admin/events': typeof AuthenticatedAdminEventsRoute
   '/admin/gallery': typeof AuthenticatedAdminGalleryRoute
@@ -166,6 +190,7 @@ export interface FileRoutesByTo {
   '/admin/team': typeof AuthenticatedAdminTeamRoute
   '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/play/$levelId': typeof AuthenticatedPlayLevelIdRoute
+  '/register/id': typeof AuthenticatedRegisterIdRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRoutesById {
@@ -181,6 +206,8 @@ export interface FileRoutesById {
   '/team': typeof TeamRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/payment': typeof AuthenticatedPaymentRoute
+  '/_authenticated/registration-complete': typeof AuthenticatedRegistrationCompleteRoute
   '/_authenticated/admin/announcements': typeof AuthenticatedAdminAnnouncementsRoute
   '/_authenticated/admin/events': typeof AuthenticatedAdminEventsRoute
   '/_authenticated/admin/gallery': typeof AuthenticatedAdminGalleryRoute
@@ -188,6 +215,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/team': typeof AuthenticatedAdminTeamRoute
   '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRoute
   '/_authenticated/play/$levelId': typeof AuthenticatedPlayLevelIdRoute
+  '/_authenticated/register/id': typeof AuthenticatedRegisterIdRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRouteTypes {
@@ -203,6 +231,8 @@ export interface FileRouteTypes {
     | '/team'
     | '/admin'
     | '/dashboard'
+    | '/payment'
+    | '/registration-complete'
     | '/admin/announcements'
     | '/admin/events'
     | '/admin/gallery'
@@ -210,6 +240,7 @@ export interface FileRouteTypes {
     | '/admin/team'
     | '/admin/users'
     | '/play/$levelId'
+    | '/register/id'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -222,6 +253,8 @@ export interface FileRouteTypes {
     | '/game'
     | '/team'
     | '/dashboard'
+    | '/payment'
+    | '/registration-complete'
     | '/admin/announcements'
     | '/admin/events'
     | '/admin/gallery'
@@ -229,6 +262,7 @@ export interface FileRouteTypes {
     | '/admin/team'
     | '/admin/users'
     | '/play/$levelId'
+    | '/register/id'
     | '/admin'
   id:
     | '__root__'
@@ -243,6 +277,8 @@ export interface FileRouteTypes {
     | '/team'
     | '/_authenticated/admin'
     | '/_authenticated/dashboard'
+    | '/_authenticated/payment'
+    | '/_authenticated/registration-complete'
     | '/_authenticated/admin/announcements'
     | '/_authenticated/admin/events'
     | '/_authenticated/admin/gallery'
@@ -250,6 +286,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/team'
     | '/_authenticated/admin/users'
     | '/_authenticated/play/$levelId'
+    | '/_authenticated/register/id'
     | '/_authenticated/admin/'
   fileRoutesById: FileRoutesById
 }
@@ -330,6 +367,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/registration-complete': {
+      id: '/_authenticated/registration-complete'
+      path: '/registration-complete'
+      fullPath: '/registration-complete'
+      preLoaderRoute: typeof AuthenticatedRegistrationCompleteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/payment': {
+      id: '/_authenticated/payment'
+      path: '/payment'
+      fullPath: '/payment'
+      preLoaderRoute: typeof AuthenticatedPaymentRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -350,6 +401,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/register/id': {
+      id: '/_authenticated/register/id'
+      path: '/register/id'
+      fullPath: '/register/id'
+      preLoaderRoute: typeof AuthenticatedRegisterIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/play/$levelId': {
       id: '/_authenticated/play/$levelId'
@@ -429,13 +487,20 @@ const AuthenticatedAdminRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedPaymentRoute: typeof AuthenticatedPaymentRoute
+  AuthenticatedRegistrationCompleteRoute: typeof AuthenticatedRegistrationCompleteRoute
   AuthenticatedPlayLevelIdRoute: typeof AuthenticatedPlayLevelIdRoute
+  AuthenticatedRegisterIdRoute: typeof AuthenticatedRegisterIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedPaymentRoute: AuthenticatedPaymentRoute,
+  AuthenticatedRegistrationCompleteRoute:
+    AuthenticatedRegistrationCompleteRoute,
   AuthenticatedPlayLevelIdRoute: AuthenticatedPlayLevelIdRoute,
+  AuthenticatedRegisterIdRoute: AuthenticatedRegisterIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -455,3 +520,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
