@@ -3,6 +3,8 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import sketchEvents from "@/assets/sketch-events.png";
 import sketchCalendar from "@/assets/sketch-calendar.png";
+import sketchStudent from "@/assets/sketch-student-easel.png";
+
 
 type LiveEvent = {
   id: string; title: string; description: string | null; event_date: string | null;
@@ -54,26 +56,32 @@ const tracks: Track[] = [
   ]},
 ];
 
-function EventCalendar() {
+export function EventCalendar({ previewEvents = [], adminPreview = false }: { previewEvents?: LiveEvent[]; adminPreview?: boolean } = {}) {
   const [rows, setRows] = useState<LiveEvent[]>([]);
   const [cursor, setCursor] = useState(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); });
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
+  const [hoverKey, setHoverKey] = useState<string | null>(null);
 
   useEffect(() => {
+    if (adminPreview) return;
     supabase.from("events").select("*").order("event_date", { ascending: true })
       .then(({ data }) => setRows((data as LiveEvent[]) || []));
-  }, []);
+  }, [adminPreview]);
+
+  const allRows = useMemo(() => (adminPreview ? previewEvents : rows), [adminPreview, previewEvents, rows]);
+
 
   const byDate = useMemo(() => {
     const m = new Map<string, LiveEvent[]>();
-    for (const e of rows) {
+    for (const e of allRows) {
       if (!e.event_date) continue;
       const k = e.event_date; // yyyy-mm-dd
       if (!m.has(k)) m.set(k, []);
       m.get(k)!.push(e);
     }
     return m;
-  }, [rows]);
+  }, [allRows]);
+
 
   const year = cursor.getFullYear();
   const month = cursor.getMonth();
@@ -95,7 +103,16 @@ function EventCalendar() {
   const selected = selectedKey ? byDate.get(selectedKey) ?? [] : [];
 
   return (
-    <section className="mt-14">
+    <section className={adminPreview ? "" : "mt-14"}>
+      {/* Starburst accent above header */}
+      <div className="mb-3 flex items-center justify-center gap-3 text-black/70">
+        <span className="font-display text-2xl">✦</span>
+        <span className="h-px w-16 bg-black/40" />
+        <span className="font-display text-3xl">✧</span>
+        <span className="h-px w-16 bg-black/40" />
+        <span className="font-display text-2xl">✦</span>
+      </div>
+
       <div className="grid gap-8 lg:grid-cols-[1.4fr_1fr] lg:items-start">
         {/* Sketch calendar — the image IS the calendar */}
         <div className="relative rounded-2xl border-[1.5px] border-black bg-white p-6 shadow-[6px_6px_0_0_rgba(17,17,17,0.9)]">
@@ -111,45 +128,89 @@ function EventCalendar() {
 
           <div className="flex items-end justify-between border-b-[1.5px] border-dashed border-black/70 pb-3">
             <div>
-              <span className="text-[11px] font-mono uppercase tracking-widest text-accent">Live Calendar</span>
+              <span className="text-[11px] font-mono uppercase tracking-widest text-accent">
+                {adminPreview ? "Admin Preview" : "Live Calendar"}
+              </span>
               <h3 className="font-display text-3xl font-bold leading-none">{monthName}</h3>
             </div>
             <div className="flex items-center gap-2">
-              <button onClick={() => setCursor(new Date(year, month - 1, 1))} className="rounded-full border-[1.5px] border-black bg-white px-3 py-1 text-sm hover:bg-secondary">←</button>
-              <button onClick={() => { const n = new Date(); setCursor(new Date(n.getFullYear(), n.getMonth(), 1)); }} className="rounded-full border-[1.5px] border-black bg-white px-3 py-1 text-xs">Today</button>
-              <button onClick={() => setCursor(new Date(year, month + 1, 1))} className="rounded-full border-[1.5px] border-black bg-white px-3 py-1 text-sm hover:bg-secondary">→</button>
+              <button type="button" onClick={() => setCursor(new Date(year, month - 1, 1))} className="rounded-full border-[1.5px] border-black bg-white px-3 py-1 text-sm hover:bg-secondary">←</button>
+              <button type="button" onClick={() => { const n = new Date(); setCursor(new Date(n.getFullYear(), n.getMonth(), 1)); }} className="rounded-full bg-black px-3 py-1 text-xs font-medium text-white">Today</button>
+              <button type="button" onClick={() => setCursor(new Date(year, month + 1, 1))} className="rounded-full border-[1.5px] border-black bg-white px-3 py-1 text-sm hover:bg-secondary">→</button>
             </div>
           </div>
 
           <div className="mt-4 grid grid-cols-7 gap-1 text-center text-[11px] font-mono uppercase tracking-wider text-muted-foreground">
             {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map((d) => <div key={d} className="py-1">{d}</div>)}
           </div>
-          <div className="mt-1 grid grid-cols-7 gap-[6px]">
+          <div className="relative mt-1 grid grid-cols-7 gap-[6px]">
             {cells.map((d, i) => {
               if (!d) return <div key={i} className="aspect-square" />;
               const k = keyFor(d);
               const evs = byDate.get(k);
               const isToday = k === todayKey;
               const isSelected = k === selectedKey;
+              const isHover = k === hoverKey;
               const hasEvents = evs && evs.length > 0;
+              const col = i % 7;
+              const popRight = col >= 4; // flip popover on right-side cells
               return (
-                <button
+                <div
                   key={i}
-                  onClick={() => setSelectedKey(hasEvents ? k : null)}
-                  onMouseEnter={() => hasEvents && setSelectedKey(k)}
-                  className={`group relative aspect-square rounded-md border-[1.5px] text-left transition-all
-                    ${hasEvents ? "border-black bg-yellow-100 hover:bg-yellow-200 cursor-pointer shadow-[2px_2px_0_0_rgba(17,17,17,0.9)]" : "border-black/30 bg-white text-muted-foreground"}
-                    ${isSelected ? "ring-2 ring-black -translate-y-0.5" : ""}
-                    ${isToday ? "outline outline-2 outline-offset-1 outline-black" : ""}`}
+                  className="relative"
+                  onMouseEnter={() => hasEvents && setHoverKey(k)}
+                  onMouseLeave={() => setHoverKey((cur) => (cur === k ? null : cur))}
                 >
-                  <span className="absolute left-1.5 top-1 text-xs font-semibold">{d}</span>
-                  {hasEvents && (
-                    <span className="absolute bottom-1 left-1/2 flex -translate-x-1/2 gap-0.5">
-                      {evs!.slice(0, 3).map((_, j) => <span key={j} className="h-1.5 w-1.5 rounded-full bg-black" />)}
-                    </span>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedKey(hasEvents ? (isSelected ? null : k) : null)}
+                    className={`group relative aspect-square w-full rounded-md border-[1.5px] text-left transition-all
+                      ${hasEvents ? "border-black bg-yellow-100 hover:bg-yellow-200 cursor-pointer shadow-[2px_2px_0_0_rgba(17,17,17,0.9)]" : "border-black/30 bg-white text-muted-foreground"}
+                      ${isSelected ? "ring-2 ring-black -translate-y-0.5" : ""}
+                      ${isToday ? "outline outline-2 outline-offset-1 outline-black" : ""}`}
+                  >
+                    <span className="absolute left-1.5 top-1 text-xs font-semibold">{d}</span>
+                    {hasEvents && (
+                      <span className="absolute bottom-1 left-1/2 flex -translate-x-1/2 gap-0.5">
+                        {evs!.slice(0, 3).map((_, j) => <span key={j} className="h-1.5 w-1.5 rounded-full bg-black" />)}
+                      </span>
+                    )}
+                    {isToday && <span className="absolute -right-1 -top-2 font-display text-sm">✧</span>}
+                  </button>
+
+                  {/* Hover popover overlay */}
+                  {isHover && hasEvents && (
+                    <div className={`absolute top-full z-30 mt-2 w-72 sm:w-80 ${popRight ? "right-0" : "left-0"}`}>
+                      <div className="relative rounded-2xl border-[1.5px] border-black bg-white p-4 shadow-[6px_6px_0_0_rgba(17,17,17,0.9)]">
+                        <span className={`absolute -top-2 ${popRight ? "right-6" : "left-6"} h-3 w-3 rotate-45 border-l-[1.5px] border-t-[1.5px] border-black bg-white`} />
+                        <div className="text-[10px] font-mono uppercase tracking-widest text-accent">
+                          {new Date(k).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}
+                        </div>
+                        <ul className="mt-2 space-y-3 max-h-72 overflow-y-auto pr-1">
+                          {evs!.map((e) => (
+                            <li key={e.id} className="border-b border-dashed border-black/30 pb-3 last:border-0 last:pb-0">
+                              {e.poster_url && <img src={e.poster_url} alt={e.title} className="mb-2 h-24 w-full rounded-lg border-[1.5px] border-black object-cover" loading="lazy" />}
+                              <div className="text-[10px] font-mono uppercase tracking-wider text-accent">{e.category || "Event"} · {e.status}</div>
+                              <h4 className="mt-0.5 font-display text-base font-semibold leading-tight">{e.title}</h4>
+                              {e.description && <p className="mt-1 line-clamp-3 text-xs text-muted-foreground">{e.description}</p>}
+                              <div className="mt-1.5 flex flex-wrap gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground">
+                                {e.start_time && <span>🕒 {e.start_time}{e.end_time ? `–${e.end_time}` : ""}</span>}
+                                {e.venue && <span>📍 {e.venue}</span>}
+                                {e.organizer && <span>👤 {e.organizer}</span>}
+                              </div>
+                              {!adminPreview && (
+                                <div className="mt-2 flex flex-wrap gap-2">
+                                  <Link to="/dashboard" className="rounded-full bg-black px-3 py-1 text-[11px] font-semibold text-white hover:opacity-90">Register Now</Link>
+                                  {e.registration_link && <a href={e.registration_link} target="_blank" rel="noreferrer" className="rounded-full border-[1.5px] border-black px-3 py-1 text-[11px] font-medium hover:bg-secondary">External ↗</a>}
+                                </div>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
                   )}
-                  {isToday && <span className="absolute -right-1 -top-2 font-display text-sm">✧</span>}
-                </button>
+                </div>
               );
             })}
           </div>
@@ -157,11 +218,17 @@ function EventCalendar() {
           <div className="mt-4 flex flex-wrap items-center gap-3 border-t-[1.5px] border-dashed border-black/70 pt-3 text-xs text-muted-foreground">
             <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-black" /> Programme scheduled</span>
             <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm outline outline-2 outline-black" /> Today</span>
-            <span>Hover or tap a highlighted date.</span>
+            <span>Hover a highlighted date for details. Click to pin.</span>
+          </div>
+
+          {/* Student illustration beside/below the grid */}
+          <div className="pointer-events-none absolute -bottom-6 -right-4 hidden w-40 lg:block">
+            <img src={sketchStudent} alt="" aria-hidden loading="lazy" className="w-full" />
           </div>
         </div>
 
         <div className="rounded-2xl border-[1.5px] border-black bg-white p-5 shadow-[6px_6px_0_0_rgba(17,17,17,0.9)]">
+
           <div className="text-xs font-medium text-accent">Programme details</div>
           <h3 className="mt-1 font-display text-xl font-bold">
             {selectedKey ? new Date(selectedKey).toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }) : "Pick a highlighted date"}
