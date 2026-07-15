@@ -73,14 +73,15 @@ export function EventCalendar({ previewEvents = [], adminPreview = false }: { pr
 
   const byDate = useMemo(() => {
     const m = new Map<string, LiveEvent[]>();
-    for (const e of rows) {
+    for (const e of allRows) {
       if (!e.event_date) continue;
       const k = e.event_date; // yyyy-mm-dd
       if (!m.has(k)) m.set(k, []);
       m.get(k)!.push(e);
     }
     return m;
-  }, [rows]);
+  }, [allRows]);
+
 
   const year = cursor.getFullYear();
   const month = cursor.getMonth();
