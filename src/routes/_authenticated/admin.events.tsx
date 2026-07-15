@@ -70,10 +70,36 @@ function AdminEvents() {
     toast.success("Deleted"); load();
   }
 
+  const [showPreview, setShowPreview] = useState(false);
+
+  // Merge current form with existing rows so preview reflects live edits
+  const previewEvents = useMemo(() => {
+    const draftId = editing?.id ?? "__draft__";
+    const draft: EventRow = { id: draftId, ...form, event_date: form.event_date || null, start_time: form.start_time || null, end_time: form.end_time || null };
+    const others = rows.filter((r) => r.id !== draftId);
+    const list = form.title && form.event_date ? [...others, draft] : rows;
+    return list;
+  }, [rows, form, editing]);
+
   return (
     <div>
-      <h2 className="font-display text-2xl font-bold">Events</h2>
-      <p className="mt-1 text-sm text-muted-foreground">Create, edit, and delete events. Public visitors and members see them immediately.</p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="font-display text-2xl font-bold">Events</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Create, edit, and delete events. Public visitors and members see them immediately.</p>
+        </div>
+        <button type="button" onClick={() => setShowPreview((v) => !v)} className="rounded-full border-[1.5px] border-black bg-white px-4 py-2 text-sm font-medium hover:bg-secondary">
+          {showPreview ? "Hide calendar preview" : "Preview on calendar"}
+        </button>
+      </div>
+
+      {showPreview && (
+        <div className="mt-6 rounded-2xl border-[1.5px] border-dashed border-black/60 bg-white p-4">
+          <div className="mb-2 text-[11px] font-mono uppercase tracking-widest text-accent">Admin Preview — how it will render on /events</div>
+          <EventCalendar previewEvents={previewEvents} adminPreview />
+        </div>
+      )}
+
 
       <form onSubmit={save} className="mt-6 grid gap-3 rounded-xl border border-border bg-surface p-5 shadow-card">
         <div className="font-display text-lg font-semibold">{editing ? "Edit event" : "New event"}</div>
