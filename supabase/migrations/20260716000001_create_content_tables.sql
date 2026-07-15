@@ -137,12 +137,7 @@ INSERT INTO public.track_events (track_key, track_name, track_tag, track_blurb, 
 ('data', 'Data Science Track', 'Data Science', 'Analyze, model, visualize and automate with data.', 'vizverse', 'VizVerse', 'Create insightful data visualizations.', 'Intermediate', 16),
 ('data', 'Data Science Track', 'Data Science', 'Analyze, model, visualize and automate with data.', 'ai-labs', 'AI Labs', 'Hands-on AI and Machine Learning workshops.', 'Advanced', 17);
 
--- Seed the 5 original hardcoded calendar events
--- We dynamically set SQL Quest Live to be upcoming in the future, and others to their original dates in April/May
+-- Seed the recurring SQL Quest Live calendar event
 INSERT INTO public.events (title, description, event_date, start_time, end_time, venue, category, status) VALUES
-('SQL Quest Live', 'Solve levels together, share hints and climb the leaderboard.', CURRENT_DATE + ((13 - EXTRACT(DOW FROM CURRENT_DATE)::integer) % 7 + 1) * INTERVAL '1 day', '16:00:00', '18:00:00', 'Lab 1 / Online', 'Weekly', 'upcoming'),
-('Intro to Pandas', 'Data wrangling from CSV to insight — beginner friendly.', '2026-04-12', '14:00:00', '16:00:00', 'Lab 3', 'Workshop', 'past'),
-('Kaggle Kickoff', 'Team up and submit your first ML solution together.', '2026-04-26', '10:00:00', '13:00:00', 'Seminar Hall 1', 'Challenge', 'past'),
-('LLMs in Production', 'Guest engineer walks through a real RAG deployment.', '2026-05-10', '15:00:00', '17:00:00', 'Main Auditorium', 'Talk', 'past'),
-('DATYX Hack 24', '24-hour build sprint. Data + AI. Big prizes.', '2026-05-24', '09:00:00', '18:00:00', 'Campus Arena', 'Hackathon', 'past');
+('SQL Quest Live', 'Solve levels together, share hints and climb the leaderboard.', CURRENT_DATE + ((13 - EXTRACT(DOW FROM CURRENT_DATE)::integer) % 7 + 1) * INTERVAL '1 day', '16:00:00', '18:00:00', 'Lab 1 / Online', 'Weekly', 'upcoming');
 
