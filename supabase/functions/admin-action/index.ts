@@ -64,20 +64,46 @@ serve(async (req) => {
       });
     }
 
-    if (action !== "approve" && action !== "reject") {
-      return new Response(JSON.stringify({ error: "Invalid action. Must be 'approve' or 'reject'" }), {
+    if (action !== "approve" && action !== "reject" && action !== "delete") {
+      return new Response(JSON.stringify({ error: "Invalid action. Must be 'approve', 'reject', or 'delete'" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
+    if (action === "delete") {
+      const { error: deleteError } = await adminClient.auth.admin.deleteUser(profile_id);
+      if (deleteError) {
+        console.error("Error deleting user account:", deleteError);
+        return new Response(JSON.stringify({ error: deleteError.message || "Failed to delete user account" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      console.log(`Admin ${user.id} deleted user account ${profile_id}`);
+      return new Response(JSON.stringify({ success: true, status: "deleted" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const statusValue = action === "approve" ? "approved" : "rejected";
+    const paymentStatusValue = action === "approve" ? "paid" : "failed";
 
     // Update target profile status
     const { error: updateError } = await adminClient
       .from("profiles")
       .update({ verification_status: statusValue })
       .eq("id", profile_id);
+
+    // Synchronize payment status
+    const { error: paymentError } = await adminClient
+      .from("payments")
+      .update({ status: paymentStatusValue })
+      .eq("profile_id", profile_id);
+
+    if (paymentError) {
+      console.warn("Warning: failed to update payment status sync:", paymentError);
+    }
 
     if (updateError) {
       console.error("Error updating profile status:", updateError);

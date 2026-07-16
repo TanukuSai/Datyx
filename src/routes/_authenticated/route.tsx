@@ -70,7 +70,7 @@ function AuthenticatedLayout() {
             .from("payments")
             .select("status")
             .eq("profile_id", user.id)
-            .eq("status", "paid")
+            .in("status", ["paid", "created"])
             .maybeSingle();
 
           if (active) {

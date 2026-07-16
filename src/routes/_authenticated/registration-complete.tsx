@@ -1,7 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { CheckCircle2, Loader2, ArrowRight, Home } from "lucide-react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/registration-complete")({
   head: () => ({
@@ -14,29 +15,74 @@ export const Route = createFileRoute("/_authenticated/registration-complete")({
 });
 
 function RegistrationComplete() {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
 
   useEffect(() => {
-    async function loadProfile() {
+    let active = true;
+    let channel: any = null;
+
+    async function initProfile() {
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const { data: prof } = await supabase
-            .from("profiles")
-            .select("*")
-            .eq("id", user.id)
-            .maybeSingle();
+        if (!user) return;
+
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .maybeSingle();
+        
+        if (active) {
           setProfile(prof);
+          if (prof?.verification_status === "approved") {
+            navigate({ to: "/dashboard", replace: true });
+            return;
+          }
         }
+
+        // Subscribe to profile status updates in real-time
+        channel = supabase
+          .channel(`profile-status-${user.id}`)
+          .on(
+            "postgres_changes",
+            {
+              event: "UPDATE",
+              schema: "public",
+              table: "profiles",
+              filter: `id=eq.${user.id}`,
+            },
+            (payload) => {
+              if (active) {
+                console.log("Realtime profile updated:", payload.new);
+                setProfile(payload.new);
+                if (payload.new.verification_status === "approved") {
+                  toast.success("Profile approved! Redirecting...");
+                  navigate({ to: "/dashboard", replace: true });
+                }
+              }
+            }
+          )
+          .subscribe();
       } catch (err) {
         console.error("Failed to load profile details:", err);
       } finally {
-        setLoading(false);
+        if (active) {
+          setLoading(false);
+        }
       }
     }
-    loadProfile();
-  }, []);
+    
+    initProfile();
+
+    return () => {
+      active = false;
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+    };
+  }, [navigate]);
 
   if (loading) {
     return (
