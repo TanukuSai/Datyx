@@ -129,7 +129,7 @@ function Auth() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/register/id`,
+          redirectTo: `${window.location.origin}/auth`,
         },
       });
       if (error) throw error;
