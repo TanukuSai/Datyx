@@ -72,15 +72,52 @@ serve(async (req) => {
     }
 
     if (action === "delete") {
+      console.log(`Admin ${user.id} initiating explicit deletion cleanup for user ${profile_id}`);
+
+      // 1. Clean up storage receipt files from payment_screenshots bucket
+      try {
+        const { data: files, error: listError } = await adminClient.storage
+          .from("payment_screenshots")
+          .list(profile_id);
+
+        if (listError) {
+          console.error("Error listing storage receipt files:", listError);
+        } else if (files && files.length > 0) {
+          const filesToRemove = files.map((f) => `${profile_id}/${f.name}`);
+          const { error: removeError } = await adminClient.storage
+            .from("payment_screenshots")
+            .remove(filesToRemove);
+          if (removeError) {
+            console.error("Error removing storage receipt files:", removeError);
+          } else {
+            console.log(`Cleaned up ${filesToRemove.length} storage files for user ${profile_id}`);
+          }
+        }
+      } catch (storageErr) {
+        console.error("Catastrophic storage cleanup error:", storageErr);
+      }
+
+      // 2. Explicitly delete database rows (bypassing RLS via adminClient)
+      try {
+        await adminClient.from("user_quest_progress").delete().eq("user_id", profile_id);
+        await adminClient.from("payments").delete().eq("profile_id", profile_id);
+        await adminClient.from("user_roles").delete().eq("user_id", profile_id);
+        await adminClient.from("profiles").delete().eq("id", profile_id);
+        console.log(`Explicit database table cleanup completed for user ${profile_id}`);
+      } catch (dbErr) {
+        console.error("Error running explicit database cleanup:", dbErr);
+      }
+
+      // 3. Delete user account from Supabase Auth
       const { error: deleteError } = await adminClient.auth.admin.deleteUser(profile_id);
       if (deleteError) {
-        console.error("Error deleting user account:", deleteError);
+        console.error("Error deleting user account from Auth:", deleteError);
         return new Response(JSON.stringify({ error: deleteError.message || "Failed to delete user account" }), {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      console.log(`Admin ${user.id} deleted user account ${profile_id}`);
+      console.log(`Admin ${user.id} successfully deleted user account ${profile_id}`);
       return new Response(JSON.stringify({ success: true, status: "deleted" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
