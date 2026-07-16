@@ -30,7 +30,31 @@ export const TOPICS: Topic[] = [
     levelsRange: "Levels 1–5",
     levelIds: [1, 2, 3, 4, 5],
     learningResources: {
-      theory: "Relational databases store data in tables. A table consists of columns (fields) and rows (records). To retrieve data, we use the `SELECT` statement. The `FROM` clause specifies the table. We can filter results using the `WHERE` clause with comparison operators (like `=`, `>`, `<`, `!=`).",
+      theory: `### 1. Introduction to Relational Databases
+Relational databases store information in structured tables. A **table** represents an entity (such as "users" or "products").
+- **Columns (fields):** Define the attributes of the data (e.g., ID, name, price). Each column has a specific data type (INTEGER, TEXT, BOOLEAN, etc.).
+- **Rows (records):** Represent individual data entries in the table.
+- **Primary Key:** A unique column (or set of columns) that identifies each row (e.g., user_id).
+
+### 2. The SELECT and FROM Clause
+To retrieve data, you use the \`SELECT\` statement, which defines *which* columns to show. The \`FROM\` clause specifies *which* table to retrieve them from:
+- \`SELECT * FROM users;\` retrieves **every column** and row.
+- \`SELECT name, city FROM users;\` retrieves only the **name** and **city** columns, discarding all other attributes.
+
+### 3. Filtering Rows with WHERE
+The \`WHERE\` clause acts as a filter, retaining only the rows that satisfy a specific logical condition:
+- **Comparison Operators:** You filter data using standard operators:
+  - \`=\` (Equal to)
+  - \`!=\` or \`<>\` (Not equal to)
+  - \`>\`, \`<\` (Greater than, Less than)
+  - \`>=\`, \`<=\` (Greater than or equal to, Less than or equal to)
+- **Strings vs Numbers:** Numeric values are written directly (e.g., \`price > 1000\`), while string text values **must be enclosed in single quotes** (e.g., \`city = 'Mumbai'\`). Single quotes are a strict SQL standard.
+
+### 4. Combining Conditions (Boolean Logic)
+You can build complex filtering rules by combining conditions:
+- \`AND\`: Evaluates to true only if **both** conditions are true (e.g., \`price > 100 AND price < 500\`).
+- \`OR\`: Evaluates to true if **either** condition is true (e.g., \`city = 'Mumbai' OR city = 'Delhi'\`).
+- \`NOT\`: Negates a condition (e.g., \`NOT city = 'Pune'\`).`,
       examples: [
         {
           sql: "SELECT * FROM users;",
@@ -55,7 +79,31 @@ export const TOPICS: Topic[] = [
     levelsRange: "Levels 6–8",
     levelIds: [6, 7, 8],
     learningResources: {
-      theory: "Use `ORDER BY` to sort records (default ascending, use `DESC` for descending). Limit output sizes with `LIMIT`. Retrieve unique/non-duplicate values with `DISTINCT`. Use `BETWEEN` to search value ranges (inclusive) and `LIKE` with wildcards (`%`) for pattern matching.",
+      theory: `### 1. Sorting Results with ORDER BY
+By default, database query results are returned in an arbitrary order. To sort your output, use the \`ORDER BY\` clause followed by the column name:
+- **Ascending (ASC):** Sorts smallest-to-largest or A-to-Z. This is the default setting (e.g., \`ORDER BY price;\` is same as \`ORDER BY price ASC;\`).
+- **Descending (DESC):** Sorts largest-to-smallest or Z-to-A (e.g., \`ORDER BY price DESC;\`).
+- **Multiple Columns:** You can sort by one column, and resolve ties using a second column (e.g., \`ORDER BY city ASC, name DESC;\`).
+
+### 2. Restricting Output with LIMIT
+The \`LIMIT\` clause is appended at the very end of a query to restrict the number of rows returned. It is extremely useful for optimization or fetching rankings (e.g., "Top 3 highest items"):
+- \`SELECT * FROM products ORDER BY price DESC LIMIT 3;\` sorts products from highest to lowest price and returns only the first three rows.
+
+### 3. Unique Records with DISTINCT
+If a column contains duplicate values and you want to retrieve a clean, unique list of entries, prepend the column list with \`DISTINCT\`:
+- \`SELECT DISTINCT city FROM users;\` returns each city represented in the users table exactly once, eliminating duplicate rows.
+
+### 4. Range Filters with BETWEEN
+The \`BETWEEN\` operator allows you to check if a value falls within a specific range (inclusive of both start and end values):
+- \`WHERE price BETWEEN 100 AND 500;\` is equivalent to \`WHERE price >= 100 AND price <= 500;\`.
+
+### 5. Pattern Matching with LIKE
+The \`LIKE\` operator performs simple wildcard comparisons, usually on text columns:
+- \`%\` (Percent wildcard): Represents **any number of characters** (including zero).
+  - \`LIKE 'A%'\` matches anything starting with 'A' (e.g., 'Aditi', 'Aligarh').
+  - \`LIKE '%gmail.com'\` matches text ending with '@gmail.com'.
+  - \`LIKE '%sql%'\` matches text containing 'sql' anywhere.
+- \`_\` (Underscore wildcard): Represents **exactly one character** (e.g., \`LIKE 'J_n'\` matches 'Jon' and 'Jan', but not 'John').`,
       examples: [
         {
           sql: "SELECT DISTINCT city FROM users;",
@@ -80,7 +128,30 @@ export const TOPICS: Topic[] = [
     levelsRange: "Levels 9–12",
     levelIds: [9, 10, 11, 12],
     learningResources: {
-      theory: "Aggregate functions perform calculations on multiple rows: `COUNT()` (total items), `SUM()` (total sum), `AVG()` (average value), `MIN()`, and `MAX()`. Group rows using `GROUP BY`. Filter aggregated results using `HAVING` (you cannot use `WHERE` on aggregate totals).",
+      theory: `### 1. Aggregate Functions
+Aggregates process columns across multiple rows to return a single computed summary value:
+- \`COUNT(column)\` / \`COUNT(*)\`: \`COUNT(*)\` counts every row, including null values. \`COUNT(column)\` counts only rows where that specific column is not NULL.
+- \`SUM(column)\`: Calculates the mathematical sum of numeric values.
+- \`AVG(column)\`: Calculates the arithmetic mean.
+- \`MIN(column)\` and \`MAX(column)\`: Retrieves the smallest and largest values.
+- **Column Aliasing:** Prepend result headers with \`AS\` to make them clean (e.g., \`SELECT COUNT(*) AS total_records\`).
+
+### 2. Grouping Rows with GROUP BY
+The \`GROUP BY\` clause splits your data table into buckets/groups based on matching column values, then applies aggregate functions to each group separately:
+- If you run: \`SELECT city, COUNT(*) FROM users GROUP BY city;\`
+  1. The database groups rows into matching city buckets.
+  2. It runs the \`COUNT(*)\` calculation inside each city bucket separately.
+- **Golden Rule:** Every non-aggregated column in your \`SELECT\` clause **must** be listed inside the \`GROUP BY\` clause (e.g., if you select \`city\`, you must group by \`city\`).
+
+### 3. Filtering Summaries with HAVING
+The \`WHERE\` clause filters individual source rows *before* they are grouped or aggregated. It cannot look at aggregate scores (e.g., \`WHERE COUNT(*) > 5\` is invalid).
+- To filter groups *after* aggregation, you **must** use the \`HAVING\` clause:
+  - \`SELECT city, COUNT(*) FROM users GROUP BY city HAVING COUNT(*) > 10;\` (returns only cities with more than 10 users).
+
+### 4. Rounding and Casting decimals
+Aggregate functions like \`AVG()\` can output decimal averages. You can clean these up using:
+- \`ROUND(value, decimals)\`: Rounds a decimal to specified decimal digits (default is 0 digits).
+- \`CAST(value AS type)\`: Converts one data type to another (e.g., \`CAST(AVG(age) AS INTEGER)\` truncates decimals into an integer).`,
       examples: [
         {
           sql: "SELECT COUNT(*) AS total_orders FROM orders;",
@@ -105,7 +176,24 @@ export const TOPICS: Topic[] = [
     levelsRange: "Levels 13–14",
     levelIds: [13, 14],
     learningResources: {
-      theory: "Normalized databases split data across tables. Use `JOIN` (or `INNER JOIN`) to combine rows with matches in both tables. Use `LEFT JOIN` to return all rows from the left table and matching rows from the right table (unmatched columns will contain `NULL`). Define match rules with `ON`.",
+      theory: `### 1. Database Normalization & Keys
+To prevent redundancy, databases split related concepts across multiple tables. For instance, user contact details are saved in \`users\`, while their purchases are saved in \`orders\`. 
+- **Primary Key:** The main identifier in a table (e.g., \`users.id\`).
+- **Foreign Key:** A column in a table that references the primary key of another table (e.g., \`orders.user_id\` references \`users.id\`).
+
+### 2. Combine tables with INNER JOIN
+An \`INNER JOIN\` combines records from two tables by looking for rows with matching values in both tables based on a specified key relationship (using the \`ON\` clause):
+- \`SELECT users.name, orders.amount FROM users INNER JOIN orders ON orders.user_id = users.id;\`
+- Rows that do not have a match in both tables are excluded from the output (e.g., users with no orders will not appear in the results).
+
+### 3. Keep left records with LEFT JOIN
+A \`LEFT JOIN\` (or \`LEFT OUTER JOIN\`) retrieves all records from the first ("left") table, and matches them with records from the second ("right") table if they exist:
+- \`SELECT users.name, orders.amount FROM users LEFT JOIN orders ON orders.user_id = users.id;\`
+- If a user has no orders, their name will still appear in the output, and the columns from the orders table will simply be shown as \`NULL\` (empty).
+
+### 4. Table Aliasing for Clean Code
+Typing full table names repeatedly is tedious. You can assign temporary short aliases to tables inside your query:
+- \`SELECT u.name, o.amount FROM users u JOIN orders o ON o.user_id = u.id;\` (here \`u\` represents \`users\` and \`o\` represents \`orders\`).`,
       examples: [
         {
           sql: "SELECT u.name, o.amount FROM users u INNER JOIN orders o ON o.user_id = u.id;",
@@ -130,7 +218,42 @@ export const TOPICS: Topic[] = [
     levelsRange: "Levels 15–20",
     levelIds: [15, 16, 17, 18, 19, 20],
     learningResources: {
-      theory: "Write conditional checks with `CASE WHEN`. Put queries inside queries (subqueries). Create temporary named result sets with Common Table Expressions (`WITH name AS ...`). Use window functions like `ROW_NUMBER() OVER(PARTITION BY ... ORDER BY ...)` to perform row-by-row comparisons.",
+      theory: `### 1. Conditional logic with CASE
+The \`CASE\` statement acts like an \`if-then-else\` statement inside your query columns:
+\`\`\`sql
+SELECT name,
+  CASE
+    WHEN score >= 90 THEN 'A'
+    WHEN score >= 75 THEN 'B'
+    ELSE 'C'
+  END AS grade
+FROM students;
+\`\`\`
+
+### 2. Nested Subqueries
+A subquery is a query nested inside another query, typically enclosed in parentheses. They can be used inside \`SELECT\`, \`FROM\`, or \`WHERE\` clauses:
+- **Scalar Subquery:** Returns a single value (e.g., comparing against average: \`WHERE price > (SELECT AVG(price) FROM products)\`).
+- **Set Comparisons:** Returns a column of values to match against (e.g., using \`IN\`: \`WHERE user_id IN (SELECT user_id FROM VIP_users)\`).
+
+### 3. Common Table Expressions (CTEs)
+CTEs define temporary, named result sets that are valid only during the execution of that single query. They make highly complex queries much cleaner and readable:
+- You declare a CTE using the \`WITH\` clause:
+\`\`\`sql
+WITH user_totals AS (
+  SELECT user_id, SUM(amount) AS total_spent
+  FROM orders GROUP BY user_id
+)
+SELECT u.name, ut.total_spent
+FROM users u JOIN user_totals ut ON ut.user_id = u.id;
+\`\`\`
+
+### 4. Window Functions
+Unlike aggregate functions which collapse multiple rows into a single summary row, **window functions** perform calculations across a set of table rows that are related to the current row, while still preserving individual rows in the output:
+- **Syntax:** You define the window partition frame using the \`OVER()\` clause:
+  - \`ROW_NUMBER() OVER (PARTITION BY department ORDER BY salary DESC) AS rank\`
+  - \`PARTITION BY\`: Divides rows into groups (similar to GROUP BY but keeps individual rows).
+  - \`ORDER BY\`: Defines the evaluation sorting sequence inside each partition bucket.
+- **Common window functions:** \`ROW_NUMBER()\` (increments by 1), \`RANK()\` (places tied values on the same rank and skips ranks), \`DENSE_RANK()\` (places tied values on same rank but does not skip), and \`SUM(amount) OVER (ORDER BY id)\` (creates running totals).`,
       examples: [
         {
           sql: "SELECT name, CASE WHEN score >= 50 THEN 'Pass' ELSE 'Fail' END AS result FROM exam_scores;",
