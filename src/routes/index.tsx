@@ -1,10 +1,8 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Database, Trophy, Zap, Users, Code2, LineChart } from "lucide-react";
-import { useEffect, useState } from "react";
 import logoAsset from "@/assets/datyx-logo.png.asset.json";
 import sketchCommunity from "@/assets/sketch-community.png";
 import sketchRocket from "@/assets/sketch-rocket.png";
-import { supabase } from "@/integrations/supabase/client";
 
 
 export const Route = createFileRoute("/")({
@@ -12,17 +10,6 @@ export const Route = createFileRoute("/")({
 });
 
 function Home() {
-  const navigate = useNavigate();
-  const [checking, setChecking] = useState(true);
-  useEffect(() => {
-    supabase.auth.getSession().then(async ({ data }) => {
-      if (!data.session) { setChecking(false); return; }
-      const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", data.session.user.id);
-      const isAdmin = roles?.some((r) => r.role === "admin");
-      navigate({ to: isAdmin ? "/admin" : "/dashboard", replace: true });
-    });
-  }, [navigate]);
-  if (checking) return <div className="min-h-[60vh]" />;
   return (
     <div>
       {/* Hero */}
