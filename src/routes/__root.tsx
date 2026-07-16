@@ -14,7 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
 import type { User } from "@supabase/supabase-js";
-import logoAsset from "@/assets/datyx-logo.png.asset.json";
+import logoAsset from "@/assets/logo.jpeg";
 
 function NotFoundComponent() {
   return (
@@ -161,7 +161,7 @@ function SiteHeader({ user, isAdmin }: { user: User | null; isAdmin: boolean }) 
     <header className="sticky top-0 z-50 border-b border-border/60 bg-background/70 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link to="/" className="flex items-center gap-2.5 font-display text-lg font-bold">
-          <img src={logoAsset.url} alt="DATYX Data Science Club" className="h-9 w-9 rounded-full ring-1 ring-primary/40 bg-white" />
+          <img src={logoAsset} alt="DATYX Data Science Club" className="h-9 w-9 rounded-full ring-1 ring-primary/40 bg-white" />
           <span className="tracking-tight">DATYX<span className="ml-1 text-[10px] font-medium uppercase tracking-widest text-muted-foreground">Club</span></span>
         </Link>
         <nav className="hidden items-center gap-1 md:flex">
@@ -224,7 +224,7 @@ function SiteFooter() {
       <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:grid-cols-2 sm:px-6 md:grid-cols-4 lg:px-8">
         <div>
           <div className="flex items-center gap-2 font-display text-lg font-bold">
-            <img src={logoAsset.url} alt="DATYX" className="h-8 w-8 rounded-full bg-white" />
+            <img src={logoAsset} alt="DATYX" className="h-8 w-8 rounded-full bg-white" />
             DATYX
           </div>
           <p className="mt-3 text-sm text-muted-foreground">The official data science club — learn, build, compete.</p>

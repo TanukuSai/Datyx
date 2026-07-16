@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Database, Trophy, Zap, Users, Code2, LineChart } from "lucide-react";
-import logoAsset from "@/assets/datyx-logo.png.asset.json";
+import logoAsset from "@/assets/logo.jpeg";
 import sketchCommunity from "@/assets/sketch-community.png";
 import sketchRocket from "@/assets/sketch-rocket.png";
 
@@ -17,7 +17,7 @@ function Home() {
         <div className="absolute inset-0 bg-grid opacity-20" />
         <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-4 py-20 sm:px-6 lg:grid-cols-2 lg:gap-12 lg:px-8 lg:py-28">
           <div className="mx-auto max-w-xl text-center lg:mx-0 lg:text-left">
-            <img src={logoAsset.url} alt="DATYX Data Science Club" className="mx-auto mb-6 h-20 w-20 rounded-full bg-white shadow-glow ring-2 ring-primary/40 lg:mx-0" />
+            <img src={logoAsset} alt="DATYX Data Science Club" className="mx-auto mb-6 h-20 w-20 rounded-full bg-white shadow-glow ring-2 ring-primary/40 lg:mx-0" />
             <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
               Future Innovations · Data Science Club
