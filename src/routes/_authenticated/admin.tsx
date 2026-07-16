@@ -39,6 +39,7 @@ function AdminLayout() {
 
   const nav: { to: string; label: string; exact?: boolean }[] = [
     { to: "/admin", label: "Dashboard", exact: true },
+    { to: "/admin/quest", label: "SQL Quest Settings" },
     { to: "/admin/events", label: "Events" },
     { to: "/admin/team", label: "Team" },
     { to: "/admin/messages", label: "Contact Messages" },

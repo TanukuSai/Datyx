@@ -9,7 +9,9 @@ import { ChevronLeft, ChevronRight, Play as PlayIcon, Lightbulb, Trophy, Loader2
 import { LEVELS, getLevel, type Level } from "@/lib/sql-quest/levels";
 import { runQuery, type RunOutcome, type RunResult } from "@/lib/sql-quest/runner";
 import { validate } from "@/lib/sql-quest/validate";
-import { isUnlocked, loadProgress, markCleared, type Progress } from "@/lib/sql-quest/progress";
+import { isUnlocked, loadProgress, fetchUserProgress, recordLevelCompletion, type Progress } from "@/lib/sql-quest/progress";
+import { getTopicByLevelId, isTopicUnlocked } from "@/lib/sql-quest/topics";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/play/$levelId")({
   head: ({ params }) => ({
@@ -36,9 +38,67 @@ function Play() {
   const [hintIdx, setHintIdx] = useState(0);
   const [showHint, setShowHint] = useState(false);
 
+  const [checkingAccess, setCheckingAccess] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+
   useEffect(() => {
-    setProgress(loadProgress());
-  }, []);
+    async function runCheck() {
+      setCheckingAccess(true);
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const user = sessionData?.session?.user;
+        if (!user) {
+          navigate({ to: "/auth", replace: true });
+          return;
+        }
+        setUserId(user.id);
+
+        // Fetch admin state
+        const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
+        const admin = roles?.some((r) => r.role === "admin") ?? false;
+        setIsAdmin(admin);
+
+        // Fetch settings
+        const { data: settings } = await supabase
+          .from("quest_settings")
+          .select("active_topic_id")
+          .eq("id", 1)
+          .maybeSingle();
+
+        const activeTopic = settings?.active_topic_id || "topic_1";
+        
+        const { data: isActive } = await supabase.rpc("is_quest_active");
+
+        // Sync user progress
+        const p = await fetchUserProgress(user.id);
+        setProgress(p);
+
+        // Gating
+        if (!admin) {
+          if (!isActive) {
+            toast.error("SQL Quest is currently closed.");
+            navigate({ to: "/game", replace: true });
+            return;
+          }
+
+          if (level) {
+            const levelTopic = getTopicByLevelId(level.id);
+            if (levelTopic && !isTopicUnlocked(levelTopic.id, activeTopic)) {
+              toast.error(`Topic "${levelTopic.name}" is locked. It hasn't been released yet.`);
+              navigate({ to: "/game", replace: true });
+              return;
+            }
+          }
+        }
+      } catch (e) {
+        console.error("Gating check error:", e);
+      } finally {
+        setCheckingAccess(false);
+      }
+    }
+    runCheck();
+  }, [levelId, level, navigate]);
 
   useEffect(() => {
     if (!level) return;
@@ -55,6 +115,15 @@ function Play() {
   }, [level]);
 
   const unlocked = level ? isUnlocked(level.id, progress) : false;
+
+  if (checkingAccess) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-2 font-mono text-sm text-muted-foreground">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span>Checking timing gating access...</span>
+      </div>
+    );
+  }
 
   if (!level) {
     return (
@@ -104,8 +173,10 @@ function Play() {
     const v = validate(r.result, expected, { orderMatters: level.orderMatters !== false });
     setSubmitted(v);
     if (v.correct && !alreadyCleared) {
-      const p = markCleared(level.id, level.xp);
-      setProgress(p);
+      if (userId) {
+        const p = await recordLevelCompletion(userId, level.id, level.xp);
+        setProgress(p);
+      }
       toast.success(`Cleared! +${level.xp} XP`);
     } else if (v.correct) {
       toast.success("Correct again ✔");

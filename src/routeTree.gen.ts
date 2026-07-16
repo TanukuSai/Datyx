@@ -27,6 +27,7 @@ import { Route as AuthenticatedRegisterIdRouteImport } from './routes/_authentic
 import { Route as AuthenticatedPlayLevelIdRouteImport } from './routes/_authenticated/play.$levelId'
 import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authenticated/admin.users'
 import { Route as AuthenticatedAdminTeamRouteImport } from './routes/_authenticated/admin.team'
+import { Route as AuthenticatedAdminQuestRouteImport } from './routes/_authenticated/admin.quest'
 import { Route as AuthenticatedAdminMessagesRouteImport } from './routes/_authenticated/admin.messages'
 import { Route as AuthenticatedAdminGalleryRouteImport } from './routes/_authenticated/admin.gallery'
 import { Route as AuthenticatedAdminEventsRouteImport } from './routes/_authenticated/admin.events'
@@ -123,6 +124,11 @@ const AuthenticatedAdminTeamRoute = AuthenticatedAdminTeamRouteImport.update({
   path: '/team',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAdminQuestRoute = AuthenticatedAdminQuestRouteImport.update({
+  id: '/quest',
+  path: '/quest',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
 const AuthenticatedAdminMessagesRoute =
   AuthenticatedAdminMessagesRouteImport.update({
     id: '/messages',
@@ -165,6 +171,7 @@ export interface FileRoutesByFullPath {
   '/admin/events': typeof AuthenticatedAdminEventsRoute
   '/admin/gallery': typeof AuthenticatedAdminGalleryRoute
   '/admin/messages': typeof AuthenticatedAdminMessagesRoute
+  '/admin/quest': typeof AuthenticatedAdminQuestRoute
   '/admin/team': typeof AuthenticatedAdminTeamRoute
   '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/play/$levelId': typeof AuthenticatedPlayLevelIdRoute
@@ -187,6 +194,7 @@ export interface FileRoutesByTo {
   '/admin/events': typeof AuthenticatedAdminEventsRoute
   '/admin/gallery': typeof AuthenticatedAdminGalleryRoute
   '/admin/messages': typeof AuthenticatedAdminMessagesRoute
+  '/admin/quest': typeof AuthenticatedAdminQuestRoute
   '/admin/team': typeof AuthenticatedAdminTeamRoute
   '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/play/$levelId': typeof AuthenticatedPlayLevelIdRoute
@@ -212,6 +220,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/events': typeof AuthenticatedAdminEventsRoute
   '/_authenticated/admin/gallery': typeof AuthenticatedAdminGalleryRoute
   '/_authenticated/admin/messages': typeof AuthenticatedAdminMessagesRoute
+  '/_authenticated/admin/quest': typeof AuthenticatedAdminQuestRoute
   '/_authenticated/admin/team': typeof AuthenticatedAdminTeamRoute
   '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRoute
   '/_authenticated/play/$levelId': typeof AuthenticatedPlayLevelIdRoute
@@ -237,6 +246,7 @@ export interface FileRouteTypes {
     | '/admin/events'
     | '/admin/gallery'
     | '/admin/messages'
+    | '/admin/quest'
     | '/admin/team'
     | '/admin/users'
     | '/play/$levelId'
@@ -259,6 +269,7 @@ export interface FileRouteTypes {
     | '/admin/events'
     | '/admin/gallery'
     | '/admin/messages'
+    | '/admin/quest'
     | '/admin/team'
     | '/admin/users'
     | '/play/$levelId'
@@ -283,6 +294,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/events'
     | '/_authenticated/admin/gallery'
     | '/_authenticated/admin/messages'
+    | '/_authenticated/admin/quest'
     | '/_authenticated/admin/team'
     | '/_authenticated/admin/users'
     | '/_authenticated/play/$levelId'
@@ -430,6 +442,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminTeamRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/quest': {
+      id: '/_authenticated/admin/quest'
+      path: '/quest'
+      fullPath: '/admin/quest'
+      preLoaderRoute: typeof AuthenticatedAdminQuestRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/messages': {
       id: '/_authenticated/admin/messages'
       path: '/messages'
@@ -466,6 +485,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminEventsRoute: typeof AuthenticatedAdminEventsRoute
   AuthenticatedAdminGalleryRoute: typeof AuthenticatedAdminGalleryRoute
   AuthenticatedAdminMessagesRoute: typeof AuthenticatedAdminMessagesRoute
+  AuthenticatedAdminQuestRoute: typeof AuthenticatedAdminQuestRoute
   AuthenticatedAdminTeamRoute: typeof AuthenticatedAdminTeamRoute
   AuthenticatedAdminUsersRoute: typeof AuthenticatedAdminUsersRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
@@ -476,6 +496,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminEventsRoute: AuthenticatedAdminEventsRoute,
   AuthenticatedAdminGalleryRoute: AuthenticatedAdminGalleryRoute,
   AuthenticatedAdminMessagesRoute: AuthenticatedAdminMessagesRoute,
+  AuthenticatedAdminQuestRoute: AuthenticatedAdminQuestRoute,
   AuthenticatedAdminTeamRoute: AuthenticatedAdminTeamRoute,
   AuthenticatedAdminUsersRoute: AuthenticatedAdminUsersRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
