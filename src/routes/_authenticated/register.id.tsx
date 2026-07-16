@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Camera, RefreshCw, Upload, CheckCircle2, AlertCircle, ArrowRight } from "lucide-react";
@@ -36,6 +36,88 @@ function RegisterId() {
 
   const frontInputRef = useRef<HTMLInputElement>(null);
   const backInputRef = useRef<HTMLInputElement>(null);
+
+  // Camera Capture States
+  const [activeCameraSlot, setActiveCameraSlot] = useState<"front" | "back" | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const activeStreamRef = useRef<MediaStream | null>(null);
+
+  // Stop camera helper and turn off green webcam light completely
+  const stopCamera = () => {
+    if (activeStreamRef.current) {
+      activeStreamRef.current.getTracks().forEach((track) => {
+        track.stop();
+      });
+      activeStreamRef.current = null;
+    }
+    setActiveCameraSlot(null);
+  };
+
+  // Start camera stream
+  const startCamera = async (slot: "front" | "back") => {
+    if (activeStreamRef.current) {
+      stopCamera();
+    }
+    setActiveCameraSlot(slot);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false,
+      });
+      activeStreamRef.current = stream;
+      
+      // Allow DOM to update first so videoRef element is present
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      }, 50);
+    } catch (err) {
+      console.error("Camera access failed:", err);
+      toast.error("Could not access camera. Please upload an image instead.");
+      setActiveCameraSlot(null);
+    }
+  };
+
+  // Capture current video frame and release webcam access immediately
+  const capturePhoto = () => {
+    const video = videoRef.current;
+    if (!video || !activeCameraSlot) return;
+
+    try {
+      const canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth || 1280;
+      canvas.height = video.videoHeight || 720;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("Could not get canvas context");
+      
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+      
+      if (activeCameraSlot === "front") {
+        setFrontImage(dataUrl);
+      } else {
+        setBackImage(dataUrl);
+      }
+      toast.success(`${activeCameraSlot === "front" ? "Front" : "Back"} ID captured.`);
+    } catch (e) {
+      console.error("Capture error:", e);
+      toast.error("Failed to capture photo.");
+    } finally {
+      // Ensure webcam stream is fully stopped and indicator light turns off
+      stopCamera();
+    }
+  };
+
+  // Ensure camera tracks are stopped if the user navigates away or component unmounts
+  useEffect(() => {
+    return () => {
+      if (activeStreamRef.current) {
+        activeStreamRef.current.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, []);
+
 
   // Downscale image client-side via canvas
   const downscaleImage = (file: File): Promise<string> => {
@@ -352,30 +434,73 @@ function RegisterId() {
               ref={frontInputRef}
               onChange={(e) => handleFileChange(e, "front")}
               accept="image/*"
-              capture="environment"
               className="hidden"
             />
             
-            {frontImage ? (
+            {activeCameraSlot === "front" ? (
+              <div className="relative aspect-[3/2] w-full overflow-hidden rounded-lg border-2 border-primary bg-black">
+                <video 
+                  ref={videoRef} 
+                  className="h-full w-full object-cover" 
+                  autoPlay 
+                  playsInline 
+                  muted 
+                />
+                <div className="absolute bottom-2 inset-x-0 flex justify-center gap-2 px-4 z-20">
+                  <button 
+                    type="button"
+                    onClick={capturePhoto}
+                    className="rounded-full bg-accent text-white px-3 py-1.5 text-xs font-bold shadow-glow hover:opacity-90 flex items-center gap-1"
+                  >
+                    📸 Capture
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={stopCamera}
+                    className="rounded-full bg-white text-black px-3 py-1.5 text-xs font-bold hover:bg-secondary border border-border"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : frontImage ? (
               <div className="group relative aspect-[3/2] w-full overflow-hidden rounded-lg border border-border bg-background">
                 <img src={frontImage} alt="ID Front Preview" className="h-full w-full object-cover" />
-                <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+                <div className="absolute inset-0 flex flex-col gap-2 items-center justify-center bg-black/60 opacity-0 transition-opacity group-hover:opacity-100">
+                  <button
+                    onClick={() => startCamera("front")}
+                    className="flex items-center gap-1.5 rounded-full bg-accent px-3 py-1.5 text-[11px] font-semibold text-white hover:opacity-90"
+                  >
+                    📸 Capture with Camera
+                  </button>
                   <button
                     onClick={() => triggerUpload("front")}
-                    className="flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-black hover:bg-secondary"
+                    className="flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-[11px] font-semibold text-black hover:bg-secondary"
                   >
-                    <RefreshCw className="h-3 w-3" /> Retake
+                    📁 Upload File
                   </button>
                 </div>
               </div>
             ) : (
-              <button
-                onClick={() => triggerUpload("front")}
-                className="flex aspect-[3/2] w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-border bg-background/60 hover:bg-secondary/40"
-              >
-                <Camera className="h-8 w-8 text-muted-foreground" />
-                <span className="mt-2 text-xs font-medium">Take Photo / Upload</span>
-              </button>
+              <div className="flex aspect-[3/2] w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-border bg-background/60 p-4">
+                <Camera className="h-8 w-8 text-muted-foreground mb-3" />
+                <div className="flex flex-col gap-2 w-full max-w-[160px]">
+                  <button
+                    type="button"
+                    onClick={() => startCamera("front")}
+                    className="rounded-full bg-primary text-primary-foreground px-3 py-1.5 text-[11px] font-semibold hover:opacity-90"
+                  >
+                    📸 Use Camera
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => triggerUpload("front")}
+                    className="rounded-full border border-border bg-white text-black px-3 py-1.5 text-[11px] font-semibold hover:bg-secondary"
+                  >
+                    📁 Upload Photo
+                  </button>
+                </div>
+              </div>
             )}
           </div>
 
@@ -387,30 +512,73 @@ function RegisterId() {
               ref={backInputRef}
               onChange={(e) => handleFileChange(e, "back")}
               accept="image/*"
-              capture="environment"
               className="hidden"
             />
 
-            {backImage ? (
+            {activeCameraSlot === "back" ? (
+              <div className="relative aspect-[3/2] w-full overflow-hidden rounded-lg border-2 border-primary bg-black">
+                <video 
+                  ref={videoRef} 
+                  className="h-full w-full object-cover" 
+                  autoPlay 
+                  playsInline 
+                  muted 
+                />
+                <div className="absolute bottom-2 inset-x-0 flex justify-center gap-2 px-4 z-20">
+                  <button 
+                    type="button"
+                    onClick={capturePhoto}
+                    className="rounded-full bg-accent text-white px-3 py-1.5 text-xs font-bold shadow-glow hover:opacity-90 flex items-center gap-1"
+                  >
+                    📸 Capture
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={stopCamera}
+                    className="rounded-full bg-white text-black px-3 py-1.5 text-xs font-bold hover:bg-secondary border border-border"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : backImage ? (
               <div className="group relative aspect-[3/2] w-full overflow-hidden rounded-lg border border-border bg-background">
                 <img src={backImage} alt="ID Back Preview" className="h-full w-full object-cover" />
-                <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+                <div className="absolute inset-0 flex flex-col gap-2 items-center justify-center bg-black/60 opacity-0 transition-opacity group-hover:opacity-100">
+                  <button
+                    onClick={() => startCamera("back")}
+                    className="flex items-center gap-1.5 rounded-full bg-accent px-3 py-1.5 text-[11px] font-semibold text-white hover:opacity-90"
+                  >
+                    📸 Capture with Camera
+                  </button>
                   <button
                     onClick={() => triggerUpload("back")}
-                    className="flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-black hover:bg-secondary"
+                    className="flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-[11px] font-semibold text-black hover:bg-secondary"
                   >
-                    <RefreshCw className="h-3 w-3" /> Retake
+                    📁 Upload File
                   </button>
                 </div>
               </div>
             ) : (
-              <button
-                onClick={() => triggerUpload("back")}
-                className="flex aspect-[3/2] w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-border bg-background/60 hover:bg-secondary/40"
-              >
-                <Camera className="h-8 w-8 text-muted-foreground" />
-                <span className="mt-2 text-xs font-medium">Take Photo / Upload</span>
-              </button>
+              <div className="flex aspect-[3/2] w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-border bg-background/60 p-4">
+                <Camera className="h-8 w-8 text-muted-foreground mb-3" />
+                <div className="flex flex-col gap-2 w-full max-w-[160px]">
+                  <button
+                    type="button"
+                    onClick={() => startCamera("back")}
+                    className="rounded-full bg-primary text-primary-foreground px-3 py-1.5 text-[11px] font-semibold hover:opacity-90"
+                  >
+                    📸 Use Camera
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => triggerUpload("back")}
+                    className="rounded-full border border-border bg-white text-black px-3 py-1.5 text-[11px] font-semibold hover:bg-secondary"
+                  >
+                    📁 Upload Photo
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         </div>
