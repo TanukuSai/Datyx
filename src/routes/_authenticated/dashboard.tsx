@@ -18,13 +18,24 @@ type Announcement = { id: string; title: string; body: string; created_at: strin
 function Dashboard() {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<{ full_name: string | null } | null>(null);
   const [progress, setProgress] = useState<Progress>({ cleared: {}, xp: 0 });
   const [events, setEvents] = useState<EventRow[]>([]);
   const [regs, setRegs] = useState<Registration[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUser(data.user));
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user);
+      if (data.user) {
+        supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("id", data.user.id)
+          .maybeSingle()
+          .then(({ data: prof }) => setProfile(prof));
+      }
+    });
     setProgress(loadProgress());
     loadAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -58,7 +69,7 @@ function Dashboard() {
     navigate({ to: "/auth", replace: true });
   }
 
-  const name = (user?.user_metadata?.full_name as string | undefined) || user?.email?.split("@")[0] || "member";
+  const name = profile?.full_name || user?.email?.split("@")[0] || "member";
   const cleared = Object.keys(progress.cleared).length;
   const nextLevel = Math.min(highestUnlocked(progress), LEVELS.length);
   const registeredIds = new Set(regs.map((r) => r.event_slug));
