@@ -4,7 +4,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
-import logoAsset from "@/assets/datyx-logo.png.asset.json";
+import logoAsset from "@/assets/logo.jpeg";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -158,7 +158,7 @@ function Auth() {
     <div className="mx-auto flex min-h-[80vh] max-w-md items-center px-4 py-16">
       <div className="w-full rounded-xl border border-border bg-surface p-8 shadow-card">
         <Link to="/" className="mb-6 flex items-center gap-2.5 font-display text-lg font-bold">
-          <img src={logoAsset.url} alt="DATYX" className="h-10 w-10 rounded-full bg-white ring-1 ring-primary/40" />
+          <img src={logoAsset} alt="DATYX" className="h-10 w-10 rounded-full bg-white ring-1 ring-primary/40" />
           DATYX
         </Link>
         <h1 className="font-display text-2xl font-bold">{mode === "signin" ? "Welcome back" : "Create your account"}</h1>
