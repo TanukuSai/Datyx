@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import sketchCoder from "@/assets/sketch-coder.png";
 import { useEffect, useState } from "react";
-import { Lock, Check, ShieldAlert, BookOpen, Clock, AlertTriangle, ArrowRight, Eye, ChevronRight, X } from "lucide-react";
+import { Lock, Check, ShieldAlert, BookOpen, Clock, AlertTriangle, ArrowRight, Eye, ChevronRight, X, Loader2 } from "lucide-react";
 import { LEVELS } from "@/lib/sql-quest/levels";
 import { loadProgress, isUnlocked, fetchUserProgress, type Progress } from "@/lib/sql-quest/progress";
 import { TOPICS, type Topic, isTopicUnlocked } from "@/lib/sql-quest/topics";
