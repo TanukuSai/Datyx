@@ -287,8 +287,21 @@ function RegisterId() {
         },
       });
 
-      if (error || !data) {
-        throw error || new Error("Failed to submit registration");
+      if (error) {
+        let errMsg = "Failed to submit registration. Check details.";
+        try {
+          const errBody = await error.context.json();
+          if (errBody && errBody.error) {
+            errMsg = errBody.error;
+          }
+        } catch {
+          errMsg = error.message || errMsg;
+        }
+        throw new Error(errMsg);
+      }
+
+      if (!data) {
+        throw new Error("Failed to submit registration");
       }
 
       toast.success("Registration submitted!");
