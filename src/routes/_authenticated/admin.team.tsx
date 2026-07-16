@@ -15,6 +15,10 @@ type TeamMember = {
   bio: string;
   category: "faculty" | "track_lead" | "creative_lead";
   display_order: number;
+  photo_url?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  linkedin?: string | null;
   created_at?: string;
 };
 
@@ -30,6 +34,10 @@ const emptyForm = {
   bio: "",
   category: "track_lead" as const,
   display_order: 1,
+  photo_url: "",
+  phone: "",
+  email: "",
+  linkedin: "",
 };
 
 function AdminTeam() {
@@ -37,6 +45,7 @@ function AdminTeam() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<TeamMember | null>(null);
   const [form, setForm] = useState(emptyForm);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
 
   async function loadTeam() {
@@ -70,12 +79,18 @@ function AdminTeam() {
       bio: m.bio,
       category: m.category,
       display_order: m.display_order,
+      photo_url: m.photo_url || "",
+      phone: m.phone || "",
+      email: m.email || "",
+      linkedin: m.linkedin || "",
     });
+    setPhotoFile(null);
   }
 
   function cancelEdit() {
     setEditing(null);
     setForm(emptyForm);
+    setPhotoFile(null);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -87,9 +102,44 @@ function AdminTeam() {
 
     setSaving(true);
     try {
+      let photoUrl = form.photo_url;
+      
+      if (photoFile) {
+        const cleanName = form.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+        const fileExt = photoFile.name.split(".").pop();
+        const fileName = `${cleanName}-${Date.now()}.${fileExt}`;
+        
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("team-photos")
+          .upload(fileName, photoFile, {
+            cacheControl: "3600",
+            upsert: true
+          });
+          
+        if (uploadError) throw uploadError;
+        
+        const { data: { publicUrl } } = supabase.storage
+          .from("team-photos")
+          .getPublicUrl(fileName);
+          
+        photoUrl = publicUrl;
+      }
+
+      const payload = {
+        name: form.name.trim(),
+        role: form.role.trim(),
+        bio: form.bio.trim(),
+        category: form.category,
+        display_order: form.display_order,
+        photo_url: photoUrl || null,
+        phone: form.phone.trim() || null,
+        email: form.email.trim() || null,
+        linkedin: form.linkedin.trim() || null,
+      };
+
       const query = editing
-        ? supabase.from("team_members").update(form).eq("id", editing.id)
-        : supabase.from("team_members").insert(form);
+        ? supabase.from("team_members").update(payload).eq("id", editing.id)
+        : supabase.from("team_members").insert(payload);
 
       const { error } = await query;
       if (error) throw error;
@@ -173,6 +223,62 @@ function AdminTeam() {
             </div>
 
             <div>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Phone Number (optional)</label>
+              <input
+                type="text"
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                placeholder="e.g. 9876543210"
+                className="input w-full"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Email (optional)</label>
+              <input
+                type="email"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                placeholder="e.g. name@email.com"
+                className="input w-full"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">LinkedIn Profile URL (optional)</label>
+              <input
+                type="url"
+                value={form.linkedin}
+                onChange={(e) => setForm({ ...form, linkedin: e.target.value })}
+                placeholder="e.g. https://linkedin.com/in/username"
+                className="input w-full"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Profile Photo (optional)</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setPhotoFile(e.target.files?.[0] || null)}
+                className="input w-full text-xs"
+              />
+              {form.photo_url && (
+                <div className="mt-2 flex items-center gap-2 bg-secondary/50 p-2 rounded-lg border border-dashed border-border/40">
+                  <img src={form.photo_url} className="h-8 w-8 rounded object-cover" alt="Preview" />
+                  <span className="text-[10px] text-muted-foreground truncate max-w-[150px]">Current Photo Active</span>
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, photo_url: "" })}
+                    className="text-[10px] text-destructive hover:underline ml-auto font-semibold"
+                  >
+                    Clear Photo
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div>
               <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Display Order (Sorting)</label>
               <input
                 type="number"
@@ -238,7 +344,14 @@ function AdminTeam() {
                     <h4 className="text-xs font-bold uppercase tracking-wider text-accent border-b border-border pb-1">{cat.label}s</h4>
                     <div className="divide-y divide-border">
                       {list.map((m) => (
-                        <div key={m.id} className="flex items-start justify-between py-3 gap-3">
+                        <div key={m.id} className="flex items-start gap-3 py-3 border-b border-border last:border-b-0">
+                          {m.photo_url ? (
+                            <img src={m.photo_url} className="h-10 w-10 rounded object-cover border border-border shrink-0 mt-0.5" alt={m.name} />
+                          ) : (
+                            <div className="h-10 w-10 rounded bg-secondary flex items-center justify-center text-xs font-bold border border-border shrink-0 mt-0.5 text-muted-foreground">
+                              {m.name.slice(0, 2).toUpperCase()}
+                            </div>
+                          )}
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
                               <span className="font-semibold text-sm text-foreground truncate">{m.name}</span>
@@ -246,6 +359,15 @@ function AdminTeam() {
                             </div>
                             <div className="text-xs text-primary font-medium">{m.role}</div>
                             <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{m.bio}</p>
+                            
+                            {/* Contact Details in List */}
+                            {(m.email || m.phone || m.linkedin) && (
+                              <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-muted-foreground font-mono">
+                                {m.email && <span className="truncate">📧 {m.email}</span>}
+                                {m.phone && <span>📞 {m.phone}</span>}
+                                {m.linkedin && <a href={m.linkedin} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">🔗 LinkedIn</a>}
+                              </div>
+                            )}
                           </div>
                           <div className="flex shrink-0 gap-1">
                             <button

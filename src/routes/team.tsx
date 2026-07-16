@@ -23,6 +23,10 @@ type TeamMember = {
   bio: string;
   category: "faculty" | "track_lead" | "creative_lead";
   display_order: number;
+  photo_url?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  linkedin?: string | null;
 };
 
 function initials(name: string) {
@@ -35,15 +39,103 @@ function initials(name: string) {
     .toUpperCase();
 }
 
-function Card({ n, r, b }: { n: string; r: string; b: string }) {
+function Card({ member }: { member: TeamMember }) {
+  const [isFlipped, setIsFlipped] = useState(false);
+
+  const handleCardClick = () => {
+    setIsFlipped(!isFlipped);
+  };
+
+  const handleLinkClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
+
+  const initialsText = initials(member.name);
+
   return (
-    <div className="rounded-xl border border-border bg-surface p-6">
-      <div className="grid h-14 w-14 place-items-center rounded-full bg-gradient-to-br from-primary to-accent font-display text-lg font-bold text-primary-foreground shadow-glow">
-        {initials(n)}
+    <div className="perspective-1000 h-[380px] w-full cursor-pointer" onClick={handleCardClick}>
+      <div className={`flip-card-inner w-full h-full ${isFlipped ? "flipped" : ""}`}>
+        
+        {/* Front Side */}
+        <div className="flip-card-front rounded-xl border border-border bg-surface overflow-hidden relative flex flex-col justify-end">
+          {member.photo_url ? (
+            <img 
+              src={member.photo_url} 
+              alt={member.name} 
+              className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-500 hover:scale-105"
+              loading="lazy"
+            />
+          ) : (
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-accent/15 flex items-center justify-center p-6">
+              <div className="grid h-20 w-20 place-items-center rounded-full bg-gradient-to-br from-primary to-accent font-display text-3xl font-bold text-primary-foreground shadow-glow">
+                {initialsText}
+              </div>
+            </div>
+          )}
+          {/* Info overlay */}
+          <div className="relative z-10 p-5 bg-gradient-to-t from-black/85 via-black/45 to-transparent text-white pt-16">
+            <h3 className="font-display text-lg font-bold text-white line-clamp-1">{member.name}</h3>
+            <div className="text-xs text-accent-foreground/90 font-semibold uppercase tracking-wider mt-0.5 line-clamp-1">{member.role}</div>
+          </div>
+        </div>
+
+        {/* Back Side */}
+        <div className="flip-card-back rounded-xl border border-border bg-surface p-6 flex flex-col justify-between overflow-y-auto">
+          <div className="space-y-3">
+            <div>
+              <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">About Lead</span>
+              <h3 className="font-display text-lg font-bold mt-0.5 leading-tight">{member.name}</h3>
+              <div className="text-xs text-accent font-semibold">{member.role}</div>
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap">{member.bio}</p>
+          </div>
+
+          <div className="mt-4 border-t border-dashed border-border/40 pt-4 space-y-2 text-xs">
+            {member.email && (
+              <div className="flex items-center gap-2 truncate">
+                <span className="font-semibold text-muted-foreground w-12 shrink-0">Email:</span>
+                <a 
+                  href={`mailto:${member.email}`} 
+                  onClick={handleLinkClick}
+                  className="text-primary hover:underline font-mono truncate"
+                >
+                  {member.email}
+                </a>
+              </div>
+            )}
+            {member.phone && (
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-muted-foreground w-12 shrink-0">Phone:</span>
+                <a 
+                  href={`tel:${member.phone}`} 
+                  onClick={handleLinkClick}
+                  className="text-primary hover:underline font-mono"
+                >
+                  {member.phone}
+                </a>
+              </div>
+            )}
+            {member.linkedin && (
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-muted-foreground w-12 shrink-0">LinkedIn:</span>
+                <a 
+                  href={member.linkedin} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  onClick={handleLinkClick}
+                  className="text-accent hover:underline font-semibold"
+                >
+                  View Profile ↗
+                </a>
+              </div>
+            )}
+            <div className="text-center pt-2 text-[10px] text-muted-foreground/60 italic font-mono select-none">
+              Click to flip card
+            </div>
+          </div>
+        </div>
+
       </div>
-      <h3 className="mt-4 font-display text-lg font-semibold">{n}</h3>
-      <div className="text-sm text-primary">{r}</div>
-      <p className="mt-2 text-sm text-muted-foreground">{b}</p>
     </div>
   );
 }
@@ -55,11 +147,12 @@ function Section({ label, title, sub, items }: { label: string; title: string; s
       <h2 className="mt-1 font-display text-2xl font-bold sm:text-3xl">{title}</h2>
       {sub ? <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{sub}</p> : null}
       <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {items.map((m) => <Card key={m.id} n={m.name} r={m.role} b={m.bio} />)}
+        {items.map((m) => <Card key={m.id} member={m} />)}
       </div>
     </section>
   );
 }
+
 
 function Team() {
   const [members, setMembers] = useState<TeamMember[]>([]);
@@ -92,6 +185,31 @@ function Team() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:px-8">
+      <style>{`
+        .perspective-1000 {
+          perspective: 1000px;
+        }
+        .flip-card-inner {
+          position: relative;
+          width: 100%;
+          height: 100%;
+          transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+          transform-style: preserve-3d;
+        }
+        .flip-card-inner.flipped {
+          transform: rotateY(180deg);
+        }
+        .flip-card-front, .flip-card-back {
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          -webkit-backface-visibility: hidden;
+          backface-visibility: hidden;
+        }
+        .flip-card-back {
+          transform: rotateY(180deg);
+        }
+      `}</style>
       <div className="grid gap-10 md:grid-cols-[1fr_1.2fr] md:items-center">
         <img src={sketchTeam} alt="Doodle of team members waving" loading="lazy" width={1024} height={768} className="order-2 w-full max-w-md justify-self-center md:order-1" />
         <div className="order-1 md:order-2">
