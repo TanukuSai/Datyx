@@ -62,6 +62,15 @@ $$;
 CREATE OR REPLACE FUNCTION public.has_active_access(_user_id uuid)
 RETURNS boolean LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = public AS $$
 BEGIN
+  -- Admins always have access
+  IF EXISTS (
+    SELECT 1 FROM public.user_roles
+    WHERE user_id = _user_id AND role = 'admin'
+  ) THEN
+    RETURN true;
+  END IF;
+
+  -- Regular members: approved profile with unexpired access
   RETURN EXISTS (
     SELECT 1 FROM public.profiles
     WHERE id = _user_id 
