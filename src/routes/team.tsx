@@ -203,8 +203,11 @@ function Team() {
           position: absolute;
           width: 100%;
           height: 100%;
-          -webkit-backface-visibility: hidden;
-          backface-visibility: hidden;
+          -webkit-backface-visibility: hidden !important;
+          backface-visibility: hidden !important;
+        }
+        .flip-card-front {
+          transform: rotateY(0deg);
         }
         .flip-card-back {
           transform: rotateY(180deg);
