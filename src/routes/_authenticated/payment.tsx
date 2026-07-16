@@ -2,7 +2,14 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { CreditCard, Loader2, ShieldCheck, Upload, AlertCircle, CheckCircle } from "lucide-react";
+import { CreditCard, Loader2, ShieldCheck, Zap, Lock } from "lucide-react";
+
+// Extend window with Razorpay type
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
 
 export const Route = createFileRoute("/_authenticated/payment")({
   head: () => ({
@@ -14,17 +21,27 @@ export const Route = createFileRoute("/_authenticated/payment")({
   component: Payment,
 });
 
+function loadRazorpayScript(): Promise<boolean> {
+  return new Promise((resolve) => {
+    if (window.Razorpay) {
+      resolve(true);
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+}
+
 function Payment() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [loadingMsg, setLoadingMsg] = useState("");
   const [profile, setProfile] = useState<any>(null);
   const [user, setUser] = useState<any>(null);
-  
-  // Manual Upload States
-  const [utr, setUtr] = useState("");
-  const [file, setFile] = useState<File | null>(null);
-  const [dragActive, setDragActive] = useState(false);
+  const [scriptReady, setScriptReady] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -37,89 +54,104 @@ function Payment() {
           .eq("id", user.id)
           .maybeSingle();
         setProfile(prof);
-        
-        // If is_csds, redirect away immediately
         if (prof?.is_csds) {
           navigate({ to: "/registration-complete", replace: true });
         }
       }
     }
     loadData();
+
+    // Pre-load Razorpay script
+    loadRazorpayScript().then(setScriptReady);
   }, [navigate]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
-    }
-  };
-
-  const handleDrag = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else if (e.type === "dragleave") {
-      setDragActive(false);
-    }
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      setFile(e.dataTransfer.files[0]);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!file) {
-      toast.error("Please upload a screenshot of the transaction.");
-      return;
-    }
-    if (!utr.trim()) {
-      toast.error("Please enter your transaction UTR / Reference number.");
+  const handlePay = async () => {
+    if (!scriptReady) {
+      toast.error("Payment gateway is still loading. Please try again.");
       return;
     }
 
     setLoading(true);
-    setLoadingMsg("Uploading receipt screenshot...");
-    
+    setLoadingMsg("Creating secure order...");
+
     try {
-      // 1. Upload file to Storage Bucket
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-      const filePath = `${user.id}/${fileName}`;
+      // Step 1: Create Razorpay order via Edge Function
+      const { data: orderData, error: orderError } = await supabase.functions.invoke(
+        "create-razorpay-order",
+        { body: {} }
+      );
 
-      const { error: uploadError } = await supabase.storage
-        .from("payment_screenshots")
-        .upload(filePath, file, {
-          cacheControl: "3600",
-          upsert: true,
-        });
+      if (orderError || !orderData?.order_id) {
+        throw new Error(orderError?.message || "Failed to create payment order");
+      }
 
-      if (uploadError) throw uploadError;
+      setLoading(false);
 
-      // 2. Get Public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from("payment_screenshots")
-        .getPublicUrl(filePath);
+      // Step 2: Open Razorpay checkout modal
+      const razorpayKeyId = import.meta.env.VITE_RAZORPAY_KEY_ID;
 
-      setLoadingMsg("Submitting transaction details to admins...");
+      const options = {
+        key: razorpayKeyId,
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: "DATYX Club",
+        description: "One-time Membership Fee",
+        image: "/logo.png",
+        order_id: orderData.order_id,
+        handler: async (response: {
+          razorpay_payment_id: string;
+          razorpay_order_id: string;
+          razorpay_signature: string;
+        }) => {
+          // Step 3: Verify payment signature on backend
+          setLoading(true);
+          setLoadingMsg("Verifying payment...");
+          try {
+            const { error: verifyError } = await supabase.functions.invoke(
+              "verify-razorpay-payment",
+              { body: response }
+            );
 
-      // 3. Call submit-payment Edge Function
-      const { error: fnError } = await supabase.functions.invoke("submit-payment", {
-        body: { utr: utr.trim(), screenshot_url: publicUrl },
+            if (verifyError) {
+              throw new Error(verifyError.message || "Payment verification failed");
+            }
+
+            toast.success("Payment successful! Welcome to DATYX! 🎉");
+            navigate({ to: "/dashboard", replace: true });
+          } catch (err: any) {
+            toast.error(err?.message || "Payment verification failed. Please contact support.");
+            setLoading(false);
+          }
+        },
+        prefill: {
+          name: profile?.full_name || "",
+          email: user?.email || "",
+        },
+        notes: {
+          roll_no: profile?.roll_no || "",
+          branch: profile?.branch_code || "",
+        },
+        theme: {
+          color: "#4F46E5",
+        },
+        modal: {
+          ondismiss: () => {
+            setLoading(false);
+            toast.info("Payment cancelled. You can retry when ready.");
+          },
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.on("payment.failed", (response: any) => {
+        console.error("Razorpay payment failed:", response.error);
+        toast.error(`Payment failed: ${response.error.description || "Unknown error"}`);
+        setLoading(false);
       });
-
-      if (fnError) throw fnError;
-
-      toast.success("Transaction submitted successfully! Waiting for verification.");
-      navigate({ to: "/registration-complete", replace: true });
+      rzp.open();
     } catch (err: any) {
-      console.error("Manual payment verification error:", err);
-      toast.error(err?.message || "Failed to submit verification request");
+      console.error("Payment initiation error:", err);
+      toast.error(err?.message || "Something went wrong. Please try again.");
       setLoading(false);
     }
   };
@@ -133,150 +165,100 @@ function Payment() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-16">
-      <div className="text-center mb-10">
-        <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-accent/15 text-accent text-2xl shadow-glow">
-          <CreditCard />
+    <div className="mx-auto flex min-h-[80vh] max-w-lg items-center px-4 py-16">
+      <div className="w-full space-y-6">
+        {/* Header */}
+        <div className="text-center">
+          <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-primary/10 text-primary shadow-glow mb-4">
+            <CreditCard className="h-8 w-8" />
+          </div>
+          <h1 className="font-display text-3xl font-extrabold tracking-tight">Membership Fee</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Complete your one-time payment to unlock full DATYX access
+          </p>
         </div>
-        <h1 className="mt-4 font-display text-4xl font-extrabold tracking-tight">Membership Payment</h1>
-        <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
-          Scan the QR Code to complete the one-time ₹300 membership fee, and upload transaction details below.
+
+        {/* Payment Card */}
+        <div className="rounded-2xl border border-border bg-surface shadow-card overflow-hidden">
+          {/* Amount row */}
+          <div className="bg-gradient-to-r from-primary/5 to-accent/5 border-b border-border p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">One-time fee</p>
+                <p className="mt-1 font-display text-4xl font-bold text-foreground">₹300</p>
+              </div>
+              <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 text-xs font-bold text-emerald-600 uppercase tracking-wide">
+                Lifetime Access
+              </div>
+            </div>
+          </div>
+
+          {/* Features list */}
+          <div className="p-6 space-y-3">
+            {[
+              "Full SQL Quest access with all levels",
+              "DATYX event registrations",
+              "Member dashboard & progress tracking",
+              "Club announcements & resources",
+            ].map((feature) => (
+              <div key={feature} className="flex items-center gap-2.5 text-sm text-foreground">
+                <div className="h-1.5 w-1.5 rounded-full bg-primary flex-shrink-0" />
+                {feature}
+              </div>
+            ))}
+          </div>
+
+          {/* Student info preview */}
+          <div className="border-t border-border/60 bg-secondary/20 px-6 py-4">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-2">Paying as</p>
+            <p className="text-sm font-semibold text-foreground">{profile.full_name}</p>
+            <p className="text-xs text-muted-foreground font-mono">{profile.roll_no} · {profile.branch_code}</p>
+          </div>
+
+          {/* Pay button */}
+          <div className="p-6 pt-4">
+            <button
+              onClick={handlePay}
+              disabled={loading || !scriptReady}
+              className="relative flex w-full items-center justify-center gap-2.5 rounded-xl bg-gradient-to-r from-primary to-accent py-4 text-base font-bold text-primary-foreground shadow-glow transition-opacity hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  {loadingMsg}
+                </>
+              ) : !scriptReady ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  Loading payment gateway...
+                </>
+              ) : (
+                <>
+                  <Zap className="h-5 w-5" />
+                  Pay ₹300 with Razorpay
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Trust badges */}
+        <div className="flex items-center justify-center gap-6 text-[11px] text-muted-foreground">
+          <span className="flex items-center gap-1.5">
+            <Lock className="h-3.5 w-3.5" /> 256-bit SSL
+          </span>
+          <span className="flex items-center gap-1.5">
+            <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" /> Powered by Razorpay
+          </span>
+          <span className="flex items-center gap-1.5">
+            <Zap className="h-3.5 w-3.5 text-amber-500" /> Instant activation
+          </span>
+        </div>
+
+        <p className="text-center text-[11px] text-muted-foreground px-4">
+          By paying, you agree to DATYX membership terms. Supports UPI, cards, netbanking & wallets.
         </p>
       </div>
-
-      <div className="grid gap-8 md:grid-cols-[1.1fr_1.2fr]">
-        {/* Left Column: QR Code Card */}
-        <div className="rounded-2xl border border-border bg-surface p-6 shadow-card flex flex-col items-center justify-center text-center space-y-4">
-          <div className="w-full max-w-[280px] rounded-xl overflow-hidden border-2 border-primary/20 bg-white p-4 shadow-sm">
-            <img
-              src="/qr-code.png"
-              alt="PhonePe Accepted Here QR Code"
-              className="w-full object-contain"
-            />
-          </div>
-          <div className="space-y-1">
-            <p className="text-sm font-bold text-foreground">Scan with PhonePe or any UPI App</p>
-            <p className="text-xs text-muted-foreground">Account Holder: Maduri Sannith Reddy</p>
-          </div>
-          <div className="w-full rounded-xl bg-secondary/40 border border-border/60 p-4 text-left">
-            <div className="flex justify-between text-xs font-semibold text-muted-foreground">
-              <span>Amount Due</span>
-              <span className="text-foreground font-bold">₹300.00</span>
-            </div>
-            <div className="mt-2 border-t border-border/80 pt-2 flex justify-between text-xs text-muted-foreground font-mono">
-              <span>Verification Type:</span>
-              <span className="font-semibold text-accent uppercase tracking-wide">Manual Check</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column: Submission Form */}
-        <form onSubmit={handleSubmit} className="rounded-2xl border border-border bg-surface p-6 shadow-card space-y-5">
-          <h3 className="font-display text-xl font-bold flex items-center gap-2 border-b border-border pb-3">
-            Submit Transaction Receipt
-          </h3>
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              UTR / UPI Reference ID
-            </label>
-            <input
-              type="text"
-              value={utr}
-              onChange={(e) => setUtr(e.target.value)}
-              placeholder="e.g. 619284710482"
-              className="input w-full"
-              required
-            />
-            <p className="text-[10px] text-muted-foreground">
-              Provide the 12-digit transaction number (UTR) printed on your payment receipt receipt.
-            </p>
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Transaction Screenshot
-            </label>
-            <div
-              onDragEnter={handleDrag}
-              onDragOver={handleDrag}
-              onDragLeave={handleDrag}
-              onDrop={handleDrop}
-              className={`relative border-2 border-dashed rounded-xl p-6 text-center transition-all ${
-                dragActive ? "border-primary bg-primary/5" : "border-border hover:border-primary/40 bg-secondary/15"
-              }`}
-            >
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-              />
-              {file ? (
-                <div className="space-y-2">
-                  <CheckCircle className="mx-auto h-8 w-8 text-emerald-500 animate-bounce" />
-                  <p className="text-xs font-semibold text-foreground truncate max-w-xs mx-auto">
-                    {file.name}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground">
-                    Click or drag new file to replace
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <Upload className="mx-auto h-8 w-8 text-muted-foreground" />
-                  <p className="text-xs font-medium text-foreground">
-                    Click to upload or drag & drop screenshot
-                  </p>
-                  <p className="text-[10px] text-muted-foreground">
-                    Supports PNG, JPG, JPEG (Max 5MB)
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-accent py-3 text-sm font-semibold text-primary-foreground shadow-glow hover:opacity-90 disabled:opacity-50"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" /> {loadingMsg}
-              </>
-            ) : (
-              <>Submit Verification Details</>
-            )}
-          </button>
-
-          <div className="flex items-start gap-2 rounded-lg bg-amber-500/5 border border-amber-500/10 p-3 text-[11px] text-amber-600 leading-relaxed">
-            <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-            <span>
-              <strong>Note:</strong> Transaction verification is done manually by DATYX admins. It may take 1-2 hours for your account status to update. Submission of fraudulent receipts will result in profile deletion.
-            </span>
-          </div>
-
-          <div className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground border-t border-border/40 pt-3">
-            <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" /> Manual Payment Safety Check Active
-          </div>
-        </form>
-      </div>
-
-      <style>{`
-        .input {
-          border-radius: 9999px;
-          border: 1px solid var(--color-border);
-          background: var(--color-input);
-          padding: 0.6rem 1rem;
-          font-size: 0.875rem;
-          outline: none;
-          transition: border-color 0.15s;
-        }
-        .input:focus {
-          border-color: var(--color-primary);
-        }
-      `}</style>
     </div>
   );
 }
