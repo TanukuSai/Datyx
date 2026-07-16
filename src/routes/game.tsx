@@ -1,10 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import sketchCoder from "@/assets/sketch-coder.png";
 import { useEffect, useState } from "react";
-import { Lock, Check } from "lucide-react";
+import { Lock, Check, ShieldAlert } from "lucide-react";
 import { LEVELS, LEVEL_COUNT_TOTAL } from "@/lib/sql-quest/levels";
 import { loadProgress, isUnlocked, type Progress } from "@/lib/sql-quest/progress";
-import { supabase } from "@/integrations/supabase/client";
+import { useAccess } from "@/hooks/useAccess";
 
 export const Route = createFileRoute("/game")({
   head: () => ({
@@ -26,11 +26,10 @@ const tiers = [
 ];
 
 function Game() {
-  const [authed, setAuthed] = useState<boolean | null>(null);
+  const { loading: accessLoading, signedIn, hasAccess } = useAccess();
   const [progress, setProgress] = useState<Progress>({ cleared: {}, xp: 0 });
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setAuthed(Boolean(data.session)));
     setProgress(loadProgress());
   }, []);
 
@@ -46,9 +45,13 @@ function Game() {
             <h1 className="mt-4 font-display text-5xl font-bold sm:text-6xl">SQL Quest — <span className="text-gradient">100 Level Challenge</span></h1>
             <p className="mt-4 max-w-xl text-muted-foreground">Real SQL in your browser. {seeded} live levels seeded, {LEVEL_COUNT_TOTAL - seeded} more on the roadmap. Solve, earn XP, unlock the next.</p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
-              {authed ? (
+              {hasAccess ? (
                 <Link to="/play/$levelId" params={{ levelId: "1" }} className="rounded-full bg-black px-6 py-3 text-sm font-semibold text-white hover:opacity-90">
                   ▶ Start Level 1
+                </Link>
+              ) : signedIn ? (
+                <Link to="/dashboard" className="rounded-full bg-black px-6 py-3 text-sm font-semibold text-white hover:opacity-90">
+                  Complete registration →
                 </Link>
               ) : (
                 <Link to="/auth" className="rounded-full bg-black px-6 py-3 text-sm font-semibold text-white hover:opacity-90">
@@ -57,6 +60,17 @@ function Game() {
               )}
               <a href="#tiers" className="rounded-full border-[1.5px] border-black bg-white px-6 py-3 text-sm font-semibold hover:bg-secondary">See the tiers</a>
             </div>
+
+            {/* Verification banner for signed-in but unverified users */}
+            {signedIn && !hasAccess && !accessLoading && (
+              <div className="mt-6 flex items-start gap-3 rounded-lg border border-amber-300/40 bg-amber-50 p-4">
+                <ShieldAlert className="h-5 w-5 shrink-0 text-amber-600 mt-0.5" />
+                <div>
+                  <p className="text-sm font-semibold text-amber-800">Profile verification required</p>
+                  <p className="mt-0.5 text-xs text-amber-700">Only verified DATYX members can play SQL Quest. Complete your registration and wait for admin approval to unlock the game.</p>
+                </div>
+              </div>
+            )}
           </div>
           <img src={sketchCoder} alt="Doodle of a coder at a computer" loading="lazy" width={1024} height={768} className="w-full max-w-md justify-self-center lg:justify-self-end" />
         </div>
@@ -102,7 +116,7 @@ function Game() {
               const unlocked = seed && isUnlocked(n, progress);
               const state = !seed ? "future" : cleared ? "cleared" : unlocked ? "open" : "locked";
               return (
-                <LevelTile key={n} n={n} state={state} authed={authed} />
+                <LevelTile key={n} n={n} state={state} hasAccess={hasAccess} />
               );
             })}
           </div>
@@ -112,14 +126,14 @@ function Game() {
   );
 }
 
-function LevelTile({ n, state, authed }: { n: number; state: "cleared" | "open" | "locked" | "future"; authed: boolean | null }) {
+function LevelTile({ n, state, hasAccess }: { n: number; state: "cleared" | "open" | "locked" | "future"; hasAccess: boolean }) {
   const cls = {
     cleared: "border-emerald-400/40 text-emerald-300 bg-emerald-400/10",
     open: "border-primary/50 text-primary bg-primary/10 hover:bg-primary/20",
     locked: "border-border text-muted-foreground bg-background/60",
     future: "border-border/60 text-muted-foreground/60 bg-background/40",
   }[state];
-  const clickable = authed && (state === "open" || state === "cleared");
+  const clickable = hasAccess && (state === "open" || state === "cleared");
   const inner = (
     <div className={`group aspect-square rounded-md border ${cls} grid place-items-center text-xs font-mono relative overflow-hidden ${clickable ? "cursor-pointer" : ""}`}>
       {state === "cleared" ? <Check className="h-3.5 w-3.5" /> : state === "locked" || state === "future" ? <Lock className="h-3.5 w-3.5 opacity-60" /> : <span>{n}</span>}
