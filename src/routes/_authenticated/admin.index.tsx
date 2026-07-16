@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Check, X, Shield, RefreshCw } from "lucide-react";
+import { Loader2, Check, X, Shield, RefreshCw, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   component: AdminDashboard,
@@ -39,7 +39,7 @@ function AdminDashboard() {
           verification_status,
           access_expires_at,
           created_at,
-          payments (status)
+          payments (status, utr, screenshot_url)
         `)
         .order("created_at", { ascending: false });
 
@@ -60,7 +60,14 @@ function AdminDashboard() {
     loadProfiles();
   }, []);
 
-  const handleAction = async (profileId: string, action: "approve" | "reject") => {
+  const handleAction = async (profileId: string, action: "approve" | "reject" | "delete") => {
+    if (action === "delete") {
+      const confirmDelete = window.confirm(
+        "Are you sure you want to permanently delete this user profile? This will remove all their data from the authentication database and profiles."
+      );
+      if (!confirmDelete) return;
+    }
+
     setActionId(profileId);
     try {
       const { data, error } = await supabase.functions.invoke("admin-action", {
@@ -71,7 +78,11 @@ function AdminDashboard() {
         throw error;
       }
 
-      toast.success(`Profile status successfully updated to ${data.status}!`);
+      toast.success(
+        action === "delete"
+          ? "User account deleted successfully."
+          : `Profile status successfully updated to ${data.status}!`
+      );
       await loadProfiles();
     } catch (err: any) {
       console.error("Admin action failed:", err);
@@ -81,20 +92,45 @@ function AdminDashboard() {
     }
   };
 
-  const getPaymentStatus = (p: ProfileWithPayments) => {
+  const getPaymentStatus = (p: any) => {
     if (p.is_csds) {
       return <span className="rounded-full bg-emerald-50 text-emerald-700 border border-emerald-300 px-2 py-0.5 text-xs font-semibold">CSDS (Free)</span>;
     }
     const payList = p.payments || [];
-    const hasPaid = payList.some((pay) => pay.status === "paid");
-    if (hasPaid) {
-      return <span className="rounded-full bg-blue-50 text-blue-700 border border-blue-300 px-2 py-0.5 text-xs font-semibold">Paid</span>;
-    }
-    const hasCreated = payList.some((pay) => pay.status === "created");
-    if (hasCreated) {
-      return <span className="rounded-full bg-yellow-50 text-yellow-700 border border-yellow-300 px-2 py-0.5 text-xs font-medium">Unpaid (Created)</span>;
-    }
-    return <span className="rounded-full bg-red-50 text-red-700 border border-red-300 px-2 py-0.5 text-xs font-medium">Unpaid</span>;
+    
+    // Find manual payment details if they exist
+    const manualPay = payList.find((pay: any) => pay.utr || pay.screenshot_url);
+    const hasPaid = payList.some((pay: any) => pay.status === "paid");
+    
+    return (
+      <div className="flex flex-col items-center gap-1.5">
+        {hasPaid ? (
+          <span className="rounded-full bg-blue-50 text-blue-700 border border-blue-300 px-2 py-0.5 text-xs font-semibold">Paid</span>
+        ) : manualPay ? (
+          <span className="rounded-full bg-amber-50 text-amber-700 border border-amber-300 px-2 py-0.5 text-xs font-medium">Pending Check</span>
+        ) : (
+          <span className="rounded-full bg-red-50 text-red-700 border border-red-300 px-2 py-0.5 text-xs font-medium">Unpaid</span>
+        )}
+        
+        {manualPay && (
+          <div className="text-[11px] text-muted-foreground border-t border-border/50 pt-1 text-center font-mono mt-1 space-y-0.5">
+            <div>UTR: {manualPay.utr || "N/A"}</div>
+            {manualPay.screenshot_url && (
+              <div>
+                <a
+                  href={manualPay.screenshot_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline font-semibold"
+                >
+                  View Screenshot ↗
+                </a>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
   };
 
   const getStatusBadge = (status: string) => {
@@ -171,29 +207,38 @@ function AdminDashboard() {
                             : "—"}
                         </td>
                         <td className="p-3.5 text-right">
-                          {p.verification_status === "pending" && (
-                            <div className="inline-flex gap-1.5">
-                              <button
-                                onClick={() => handleAction(p.id, "approve")}
-                                disabled={isBusy || loading}
-                                className="inline-flex items-center gap-1 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white border border-emerald-700 px-2.5 py-1 text-xs font-semibold disabled:opacity-50"
-                                title="Approve Registration"
-                              >
-                                <Check className="h-3 w-3" /> Approve
-                              </button>
-                              <button
-                                onClick={() => handleAction(p.id, "reject")}
-                                disabled={isBusy || loading}
-                                className="inline-flex items-center gap-1 rounded-full bg-red-600 hover:bg-red-700 text-white border border-red-700 px-2.5 py-1 text-xs font-semibold disabled:opacity-50"
-                                title="Reject Registration"
-                              >
-                                <X className="h-3 w-3" /> Reject
-                              </button>
-                            </div>
-                          )}
-                          {p.verification_status !== "pending" && (
-                            <span className="text-xs text-muted-foreground italic font-medium">Finalized</span>
-                          )}
+                          <div className="flex items-center justify-end gap-3">
+                            {p.verification_status === "pending" ? (
+                              <div className="inline-flex gap-1.5">
+                                <button
+                                  onClick={() => handleAction(p.id, "approve")}
+                                  disabled={isBusy || loading}
+                                  className="inline-flex items-center gap-1 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white border border-emerald-700 px-2.5 py-1 text-xs font-semibold disabled:opacity-50 transition-colors"
+                                  title="Approve Registration"
+                                >
+                                  <Check className="h-3 w-3" /> Approve
+                                </button>
+                                <button
+                                  onClick={() => handleAction(p.id, "reject")}
+                                  disabled={isBusy || loading}
+                                  className="inline-flex items-center gap-1 rounded-full bg-red-600 hover:bg-red-700 text-white border border-red-700 px-2.5 py-1 text-xs font-semibold disabled:opacity-50 transition-colors"
+                                  title="Reject Registration"
+                                >
+                                  <X className="h-3 w-3" /> Reject
+                                </button>
+                              </div>
+                            ) : (
+                              <span className="text-xs text-muted-foreground italic font-medium">Finalized</span>
+                            )}
+                            <button
+                              onClick={() => handleAction(p.id, "delete")}
+                              disabled={isBusy || loading}
+                              className="inline-flex items-center gap-1 rounded-full bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-2.5 py-1 text-xs font-semibold disabled:opacity-50 transition-colors"
+                              title="Delete User Account"
+                            >
+                              <Trash2 className="h-3 w-3" /> Remove
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
