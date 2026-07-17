@@ -263,19 +263,7 @@ function Game() {
                     <p className="mt-1 text-sm text-muted-foreground">{topic.description}</p>
                   </div>
 
-                  {unlocked && (
-                    <button
-                      onClick={() => {
-                        setActiveLearnTopic(topic);
-                        setLearnTab("theory");
-                        setPracticeInput("");
-                        setShowPracticeAnswer(false);
-                      }}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 hover:border-primary bg-primary/5 hover:bg-primary/10 px-4 py-2 text-xs font-semibold text-primary self-start md:self-auto"
-                    >
-                      <BookOpen className="h-3.5 w-3.5" /> Learn Concepts
-                    </button>
-                  )}
+
                 </div>
 
                 {/* Level Map Grid inside Topic */}
