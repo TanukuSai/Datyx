@@ -212,7 +212,7 @@ function Play() {
         {/* Problem panel */}
         <div className="rounded-xl border border-border bg-surface p-6">
           <h2 className="font-display text-lg font-semibold">{level.brief}</h2>
-          <p className="mt-3 text-sm text-muted-foreground">{level.task}</p>
+          <p className="mt-3 text-sm text-muted-foreground whitespace-pre-wrap">{level.task}</p>
 
           <SchemaPreview setup={level.setup} />
 
