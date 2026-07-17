@@ -97,7 +97,28 @@ serve(async (req) => {
         console.error("Catastrophic storage cleanup error:", storageErr);
       }
 
-      // 2. Explicitly delete database rows (bypassing RLS via adminClient)
+      // 2. Delete user account from Supabase Auth first (this will trigger Postgres ON DELETE CASCADE)
+      const { error: deleteError } = await adminClient.auth.admin.deleteUser(profile_id);
+      if (deleteError) {
+        console.error("Error deleting user account from Auth:", deleteError);
+        // Fallback: try deleting database rows directly even if auth deletion failed
+        try {
+          await adminClient.from("user_quest_progress").delete().eq("user_id", profile_id);
+          await adminClient.from("payments").delete().eq("profile_id", profile_id);
+          await adminClient.from("user_roles").delete().eq("user_id", profile_id);
+          await adminClient.from("profiles").delete().eq("id", profile_id);
+        } catch (dbErr) {
+          console.error("Error running fallback database cleanup:", dbErr);
+        }
+        return new Response(JSON.stringify({ error: deleteError.message || "Failed to delete user account from Auth" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      console.log(`Admin ${user.id} successfully deleted user account ${profile_id} from Auth`);
+
+      // 3. Cleanup database rows manually just in case cascade didn't catch something
       try {
         await adminClient.from("user_quest_progress").delete().eq("user_id", profile_id);
         await adminClient.from("payments").delete().eq("profile_id", profile_id);
@@ -108,16 +129,6 @@ serve(async (req) => {
         console.error("Error running explicit database cleanup:", dbErr);
       }
 
-      // 3. Delete user account from Supabase Auth
-      const { error: deleteError } = await adminClient.auth.admin.deleteUser(profile_id);
-      if (deleteError) {
-        console.error("Error deleting user account from Auth:", deleteError);
-        return new Response(JSON.stringify({ error: deleteError.message || "Failed to delete user account" }), {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      console.log(`Admin ${user.id} successfully deleted user account ${profile_id}`);
       return new Response(JSON.stringify({ success: true, status: "deleted" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
