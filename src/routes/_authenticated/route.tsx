@@ -93,6 +93,19 @@ function AuthenticatedLayout() {
     };
   }, [pathname]);
 
+  // Listen for real-time auth state changes (e.g. sign outs) to redirect immediately
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_OUT" || !session) {
+        navigate({ to: "/auth", replace: true });
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [navigate]);
+
   useEffect(() => {
     if (isAdmin && (
       pathname === "/register/id" ||
