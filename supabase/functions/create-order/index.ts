@@ -55,13 +55,7 @@ serve(async (req) => {
       });
     }
 
-    // 2. Reject if CSD
-    if (profile.is_csds) {
-      return new Response(JSON.stringify({ error: "CSD members do not require payment." }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    // 2. Everyone must pay 300 INR now (no CSD bypass)
 
     // 3. Reject if a paid payment already exists
     const { data: existingPaidPayment, error: paymentError } = await adminClient

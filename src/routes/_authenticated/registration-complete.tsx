@@ -105,10 +105,8 @@ function RegistrationComplete() {
         {isApproved ? (
           <>
             <h1 className="mt-6 font-display text-3xl font-bold">Registration Complete!</h1>
-            <p className="mt-3 text-sm text-muted-foreground">
-              {isCsds 
-                ? "As a CSD student, your registration is pre-approved. Welcome to the DATYX community!"
-                : "Your payment has been verified and your profile is approved. Welcome to the DATYX community!"}
+            <p className="mt-3 text-sm text-muted-foreground font-sans">
+              Your payment has been verified and your profile is approved. Welcome to the DATYX community!
             </p>
             <div className="mt-8 flex flex-col gap-3">
               <Link

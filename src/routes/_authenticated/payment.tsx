@@ -38,10 +38,7 @@ function Payment() {
           .maybeSingle();
         setProfile(prof);
         
-        // If is_csds, redirect away immediately
-        if (prof?.is_csds) {
-          navigate({ to: "/registration-complete", replace: true });
-        }
+
       }
     }
     loadData();
