@@ -173,7 +173,8 @@ function AuthenticatedLayout() {
   }
 
   // 4. Unpaid users must go to payment page (everyone must pay 300 INR)
-  if (!hasPaid) {
+  // If the profile is already approved by the admin, we bypass this check so they are never locked out of gameplay.
+  if (!hasPaid && profile.verification_status !== "approved") {
     navigate({ to: "/payment", replace: true });
     return null;
   }
