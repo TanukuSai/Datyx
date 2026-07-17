@@ -21,9 +21,9 @@ serve(async (req) => {
       });
     }
 
-    const { front, back } = await req.json();
-    if (!front || !back) {
-      return new Response(JSON.stringify({ error: "Missing front or back image" }), {
+    const { back } = await req.json();
+    if (!back) {
+      return new Response(JSON.stringify({ error: "Missing ID card back image" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -43,10 +43,9 @@ serve(async (req) => {
       return `data:image/jpeg;base64,${b64}`;
     };
 
-    const frontUri = ensureDataUri(front);
     const backUri = ensureDataUri(back);
 
-    // Call Mistral Pixtral-12B for front image
+    // Call Mistral Pixtral-12B for back image
     const callMistral = async (imageUrl: string, promptText: string) => {
       try {
         const response = await fetch("https://api.mistral.ai/v1/chat/completions", {
@@ -89,31 +88,15 @@ serve(async (req) => {
       }
     };
 
-    const frontPrompt = `You are an AI assistant analyzing the FRONT side of a student ID card. Extract the student's full name and roll number if present.
+    const backPrompt = `You are an AI assistant analyzing the BACK side of a student ID card.
+Extract the student's roll number (which is usually a 10-character code matching a pattern like 25R91A6626, printed below a barcode) and their contact phone number (which is printed after "CONTACT NO").
 Return ONLY raw JSON, with no prose, explanation, or markdown fences. The JSON must match the following structure:
 {
-  "full_name": string or null,
   "roll_no": string or null,
-  "phone": null,
-  "valid_until": string or null
-}
-For roll_no, it is usually a 10-character code matching a pattern like 24R91A6760. Ensure all fields are extracted accurately.`;
+  "phone": string or null
+}`;
 
-    const backPrompt = `You are an AI assistant analyzing the BACK side of a student ID card. Extract the student's phone number and the validity/expiry year if present.
-Return ONLY raw JSON, with no prose, explanation, or markdown fences. The JSON must match the following structure:
-{
-  "full_name": null,
-  "roll_no": null,
-  "phone": string or null,
-  "valid_until": string or null
-}
-For valid_until, extract the 4-digit expiry/validity year (e.g. 2028). Ensure all fields are extracted accurately.`;
-
-    // Execute API calls in parallel
-    const [frontRes, backRes] = await Promise.all([
-      callMistral(frontUri, frontPrompt),
-      callMistral(backUri, backPrompt),
-    ]);
+    const res = await callMistral(backUri, backPrompt);
 
     const cleanAndParseJson = (text: string) => {
       let cleaned = text.trim();
@@ -136,15 +119,14 @@ For valid_until, extract the 4-digit expiry/validity year (e.g. 2028). Ensure al
       }
     };
 
-    const frontData = frontRes.content ? cleanAndParseJson(frontRes.content) : null;
-    const backData = backRes.content ? cleanAndParseJson(backRes.content) : null;
+    const parsedData = res.content ? cleanAndParseJson(res.content) : null;
 
-    if (!frontData && !backData) {
-      console.error("Both calls failed or returned unparseable JSON.", { frontRes, backRes });
+    if (!parsedData) {
+      console.error("Call failed or returned unparseable JSON.", { res });
       return new Response(
         JSON.stringify({
-          error: "Could not read ID details",
-          details: { frontError: frontRes.error, backError: backRes.error },
+          error: "Could not read ID details from back image",
+          details: { error: res.error },
         }),
         {
           status: 500,
@@ -153,15 +135,14 @@ For valid_until, extract the 4-digit expiry/validity year (e.g. 2028). Ensure al
       );
     }
 
-    // Merge results preferring non-null values
-    const merged = {
-      full_name: frontData?.full_name || backData?.full_name || null,
-      roll_no: frontData?.roll_no || backData?.roll_no || null,
-      phone: frontData?.phone || backData?.phone || null,
-      valid_until: frontData?.valid_until || backData?.valid_until || null,
+    const responsePayload = {
+      full_name: null,
+      roll_no: parsedData.roll_no || null,
+      phone: parsedData.phone || null,
+      valid_until: null,
     };
 
-    return new Response(JSON.stringify(merged), {
+    return new Response(JSON.stringify(responsePayload), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {

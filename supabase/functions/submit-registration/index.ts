@@ -13,6 +13,10 @@ serve(async (req) => {
   }
 
   try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") || "";
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "Missing Authorization header" }), {
@@ -21,11 +25,6 @@ serve(async (req) => {
       });
     }
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-
-    // Verify JWT
     const userClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
     });
@@ -38,7 +37,7 @@ serve(async (req) => {
       });
     }
 
-    const { full_name, roll_no, phone, valid_until } = await req.json();
+    const { full_name, roll_no, phone, section } = await req.json();
 
     // 1. Validate full_name
     if (!full_name || typeof full_name !== "string" || full_name.trim() === "") {
@@ -65,31 +64,20 @@ serve(async (req) => {
       });
     }
 
-    // 3. Compute branch_code and is_csds
+    // 3. Compute branch_code and is_csds (classification remains)
     const branchCode = upperRollNo.substring(6, 8);
     const isCsds = branchCode === "67";
 
-    // 4. Validate valid_until
-    if (!valid_until) {
-      return new Response(JSON.stringify({ error: "Valid Until year is required" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    // 4. Clean and normalize section (default to N/A)
+    let finalSection = "N/A";
+    if (section && typeof section === "string" && section.trim() !== "") {
+      const cleanSec = section.trim().toUpperCase();
+      if (cleanSec !== "N/A") {
+        finalSection = cleanSec;
+      }
     }
 
-    const validUntilYear = parseInt(String(valid_until).trim(), 10);
-    const currentYear = new Date().getFullYear();
-    if (isNaN(validUntilYear) || validUntilYear < currentYear || validUntilYear > currentYear + 6) {
-      return new Response(JSON.stringify({ error: `Invalid Validity Year. Must be between ${currentYear} and ${currentYear + 6}.` }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // 5. Compute access_expires_at (August 1 of valid_until year, 00:00 UTC)
-    const accessExpiresAt = new Date(Date.UTC(validUntilYear, 7, 1, 0, 0, 0)).toISOString();
-
-    // 6. Connect as Admin client to query/write profiles
+    // 5. Connect as Admin client to query/write profiles
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);
 
     // Check if roll number already exists
@@ -110,18 +98,18 @@ serve(async (req) => {
       });
     }
 
-    // 7. Insert the profile
-    const verificationStatus = isCsds ? "approved" : "pending";
-
+    // 6. Insert the profile (Everyone must pay, so status is always pending initially)
     const { error: insertError } = await adminClient.from("profiles").insert({
       id: user.id,
       roll_no: upperRollNo,
       full_name: full_name.trim(),
+      email: user.email || null,
       phone: phone ? phone.trim() : null,
       branch_code: branchCode,
       is_csds: isCsds,
-      access_expires_at: accessExpiresAt,
-      verification_status: verificationStatus,
+      section: finalSection,
+      access_expires_at: null, // set upon admin approval/payment verification
+      verification_status: "pending",
     });
 
     if (insertError) {

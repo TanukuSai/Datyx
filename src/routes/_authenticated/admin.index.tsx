@@ -20,8 +20,21 @@ type ProfileWithPayments = {
   payments: Array<{ status: string }> | null;
 };
 
+function getDepartmentName(branchCode: string): string {
+  switch (branchCode) {
+    case "02": return "EEE";
+    case "04": return "ECE";
+    case "05": return "CSE";
+    case "66": return "CSM";
+    case "67": return "CSD";
+    case "12": return "IT";
+    default: return `DEPT-${branchCode}`;
+  }
+}
+
 function AdminDashboard() {
   const [profiles, setProfiles] = useState<ProfileWithPayments[]>([]);
+  const [mappings, setMappings] = useState<Array<{ batch_code: string; current_year: number }>>([]);
   const [loading, setLoading] = useState(true);
   const [actionId, setActionId] = useState<string | null>(null);
 
@@ -36,6 +49,9 @@ function AdminDashboard() {
           roll_no,
           branch_code,
           is_csds,
+          section,
+          phone,
+          email,
           verification_status,
           access_expires_at,
           created_at,
@@ -56,8 +72,22 @@ function AdminDashboard() {
     }
   }
 
+  async function loadMappings() {
+    try {
+      const { data, error } = await supabase
+        .from("batch_year_mappings")
+        .select("*")
+        .order("current_year", { ascending: true });
+      if (error) throw error;
+      setMappings(data || []);
+    } catch (err: any) {
+      console.error("Failed to load batch mappings:", err);
+    }
+  }
+
   useEffect(() => {
     loadProfiles();
+    loadMappings();
   }, []);
 
   const handleAction = async (profileId: string, action: "approve" | "reject" | "delete") => {
@@ -92,10 +122,80 @@ function AdminDashboard() {
     }
   };
 
-  const getPaymentStatus = (p: any) => {
-    if (p.is_csds) {
-      return <span className="rounded-full bg-emerald-50 text-emerald-700 border border-emerald-300 px-2 py-0.5 text-xs font-semibold">CSDS (Free)</span>;
+  const handleGraduate = async (batchCode: string, currentYear: number) => {
+    const nextYear = currentYear + 1;
+    const yearLabels = ["", "1st Year", "2nd Year", "3rd Year", "4th Year", "Graduated (Alumni)"];
+    const yearLabel = nextYear === 5 ? "Alumni" : yearLabels[nextYear];
+    const confirmGrad = window.confirm(
+      `Are you sure you want to graduate Batch '${batchCode}' (currently ${yearLabels[currentYear]}) to ${yearLabel}?`
+    );
+    if (!confirmGrad) return;
+
+    try {
+      const { error } = await supabase
+        .from("batch_year_mappings")
+        .update({ current_year: nextYear })
+        .eq("batch_code", batchCode);
+
+      if (error) throw error;
+      toast.success(`Batch ${batchCode} successfully graduated to ${yearLabel}!`);
+      await loadMappings();
+      await loadProfiles();
+    } catch (err: any) {
+      console.error("Failed to graduate batch:", err);
+      toast.error(err.message || "Failed to graduate batch");
     }
+  };
+
+  const handleExportCsv = () => {
+    const headers = ["Roll number", "Name", "Contact Number", "Email", "Department", "Year of education"];
+    
+    const escapeCsv = (val: string | null | undefined) => {
+      if (val === null || val === undefined) return '""';
+      const clean = String(val).replace(/"/g, '""');
+      return `"${clean}"`;
+    };
+
+    const rows = profiles.map((p) => {
+      const deptName = getDepartmentName(p.branch_code);
+      const section = (p as any).section || "N/A";
+      const departmentFormatted = section === "N/A" ? deptName : `${deptName}-${section}`;
+
+      const batchCode = p.roll_no.substring(0, 2);
+      const mapping = mappings.find((m) => m.batch_code === batchCode);
+      const yearLabels = ["", "1st Year", "2nd Year", "3rd Year", "4th Year", "Graduated"];
+      const yearLabel = mapping ? yearLabels[mapping.current_year] : "Unknown";
+
+      const contactNum = (p as any).phone || "N/A";
+      const email = (p as any).email || "N/A";
+
+      return [
+        escapeCsv(p.roll_no),
+        escapeCsv(p.full_name),
+        escapeCsv(contactNum),
+        escapeCsv(email),
+        escapeCsv(departmentFormatted),
+        escapeCsv(yearLabel),
+      ];
+    });
+
+    const csvContent = [
+      headers.join(","),
+      ...rows.map((row) => row.join(",")),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `DATYX_Enrolled_Students_${new Date().toISOString().split("T")[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success("CSV export downloaded successfully!");
+  };
+
+  const getPaymentStatus = (p: any) => {
     const payList = p.payments || [];
     
     // Find manual payment details if they exist
@@ -151,13 +251,22 @@ function AdminDashboard() {
           <h2 className="font-display text-2xl font-bold">Profile Registrations</h2>
           <p className="mt-1 text-sm text-muted-foreground">Manage and verify membership profiles.</p>
         </div>
-        <button
-          onClick={loadProfiles}
-          disabled={loading}
-          className="inline-flex items-center gap-1.5 rounded-full border border-border bg-white px-4 py-2 text-xs font-semibold hover:bg-secondary disabled:opacity-50"
-        >
-          <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} /> Refresh
-        </button>
+        <div className="inline-flex gap-2">
+          <button
+            onClick={handleExportCsv}
+            disabled={loading || profiles.length === 0}
+            className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/5 hover:bg-primary/10 px-4 py-2 text-xs font-semibold text-primary disabled:opacity-50 transition-colors"
+          >
+            📥 Export CSV
+          </button>
+          <button
+            onClick={loadProfiles}
+            disabled={loading}
+            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-white px-4 py-2 text-xs font-semibold hover:bg-secondary disabled:opacity-50"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} /> Refresh
+          </button>
+        </div>
       </div>
 
       {loading && profiles.length === 0 ? (
@@ -249,6 +358,111 @@ function AdminDashboard() {
           </div>
         </div>
       )}
+
+      {/* Year of Education Panel */}
+      <div className="mt-8 rounded-xl border border-border bg-surface p-6 shadow-card">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h3 className="font-display text-lg font-bold">Year of Education Management</h3>
+            <p className="text-xs text-muted-foreground mt-0.5 font-sans">Graduate batches of students as they progress through their academic years.</p>
+          </div>
+          
+          {/* Form to add a new batch if needed */}
+          <AddBatchForm onAdd={loadMappings} />
+        </div>
+
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 md:grid-cols-4">
+          {mappings.map((m) => {
+            const yearLabels = ["", "1st Year", "2nd Year", "3rd Year", "4th Year", "Graduated (Alumni)"];
+            const label = yearLabels[m.current_year] || "Unknown";
+            return (
+              <div key={m.batch_code} className="rounded-lg border border-border bg-secondary/10 p-4 flex flex-col justify-between gap-3 shadow-sm">
+                <div>
+                  <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-primary/15 text-primary font-mono font-bold">
+                    Batch {m.batch_code}
+                  </span>
+                  <p className="text-sm font-semibold mt-2 text-foreground">Current: {label}</p>
+                </div>
+                {m.current_year < 5 ? (
+                  <button
+                    onClick={() => handleGraduate(m.batch_code, m.current_year)}
+                    className="w-full text-center rounded bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:opacity-90 shadow-glow transition-all"
+                  >
+                    Graduate to {yearLabels[m.current_year + 1]}
+                  </button>
+                ) : (
+                  <span className="text-xs text-muted-foreground italic text-center block pt-1.5">Batch Completed</span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
+  );
+}
+
+function AddBatchForm({ onAdd }: { onAdd: () => void }) {
+  const [newBatchCode, setNewBatchCode] = useState("");
+  const [newBatchYear, setNewBatchYear] = useState(1);
+  const [adding, setAdding] = useState(false);
+
+  const handleAddBatch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newBatchCode.trim() || newBatchCode.trim().length !== 2) {
+      toast.error("Batch code must be 2 characters (e.g. 26)");
+      return;
+    }
+    
+    setAdding(true);
+    try {
+      const { error } = await supabase
+        .from("batch_year_mappings")
+        .insert({
+          batch_code: newBatchCode.trim(),
+          current_year: newBatchYear
+        });
+        
+      if (error) throw error;
+      toast.success(`Batch ${newBatchCode} added successfully!`);
+      setNewBatchCode("");
+      onAdd();
+    } catch (err: any) {
+      console.error("Failed to add batch mapping:", err);
+      toast.error(err.message || "Failed to add batch mapping");
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleAddBatch} className="flex flex-wrap items-center gap-2">
+      <input
+        type="text"
+        placeholder="Batch (e.g. 26)"
+        value={newBatchCode}
+        onChange={(e) => setNewBatchCode(e.target.value)}
+        maxLength={2}
+        className="rounded border border-border bg-white px-2.5 py-1.5 text-xs font-mono w-28 uppercase outline-none focus:border-primary"
+      />
+      <select
+        value={newBatchYear}
+        onChange={(e) => setNewBatchYear(Number(e.target.value))}
+        className="rounded border border-border bg-white px-2.5 py-1.5 text-xs font-semibold outline-none focus:border-primary"
+      >
+        <option value={1}>1st Year</option>
+        <option value={2}>2nd Year</option>
+        <option value={3}>3rd Year</option>
+        <option value={4}>4th Year</option>
+        <option value={5}>Graduated</option>
+      </select>
+      <button
+        type="submit"
+        disabled={adding}
+        className="rounded border border-border bg-white px-3 py-1.5 text-xs font-semibold hover:bg-secondary disabled:opacity-50 transition-colors"
+      >
+        + Add Batch
+      </button>
+    </form>
   );
 }

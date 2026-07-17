@@ -126,10 +126,17 @@ serve(async (req) => {
     const statusValue = action === "approve" ? "approved" : "rejected";
     const paymentStatusValue = action === "approve" ? "paid" : "failed";
 
-    // Update target profile status
+    // Update target profile status and access expiration (1 year from approval)
+    const accessExpiresAt = action === "approve" 
+      ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() 
+      : null;
+
     const { error: updateError } = await adminClient
       .from("profiles")
-      .update({ verification_status: statusValue })
+      .update({ 
+        verification_status: statusValue,
+        access_expires_at: accessExpiresAt
+      })
       .eq("id", profile_id);
 
     // Synchronize payment status

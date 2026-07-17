@@ -18,7 +18,6 @@ function RegisterId() {
   const navigate = useNavigate();
   
   // ID Upload State
-  const [frontImage, setFrontImage] = useState<string | null>(null);
   const [backImage, setBackImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingMsg, setLoadingMsg] = useState("");
@@ -29,7 +28,7 @@ function RegisterId() {
     full_name: "",
     roll_no: "",
     phone: "",
-    valid_until: "",
+    section: "",
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isManualEntry, setIsManualEntry] = useState(false);
@@ -202,14 +201,14 @@ function RegisterId() {
 
   // Submit to verify-id edge function
   const handleUploadSubmit = async () => {
-    if (!frontImage || !backImage) return;
+    if (!backImage) return;
 
     setLoading(true);
     setLoadingMsg("Extracting details from ID (pixtral-12b is reading)...");
     
     try {
       const { data, error } = await supabase.functions.invoke("verify-id", {
-        body: { front: frontImage, back: backImage },
+        body: { back: backImage },
       });
 
       if (error || !data) {
@@ -217,10 +216,10 @@ function RegisterId() {
       }
 
       setFormData({
-        full_name: data.full_name || "",
+        full_name: "", // Back of ID card does not have name, user must enter
         roll_no: data.roll_no || "",
         phone: data.phone || "",
-        valid_until: data.valid_until || "",
+        section: "",
       });
       setIsManualEntry(false);
       setStep("confirm");
@@ -232,7 +231,7 @@ function RegisterId() {
         full_name: "",
         roll_no: "",
         phone: "",
-        valid_until: "",
+        section: "",
       });
       setIsManualEntry(true);
       setStep("confirm");
@@ -257,12 +256,8 @@ function RegisterId() {
       errs.roll_no = "Must match format: 24R91A6760";
     }
 
-    const currentYear = new Date().getFullYear();
-    const validYear = parseInt(formData.valid_until.trim(), 10);
-    if (!formData.valid_until.trim()) {
-      errs.valid_until = "Validity year is required";
-    } else if (isNaN(validYear) || validYear < currentYear || validYear > currentYear + 6) {
-      errs.valid_until = `Must be between ${currentYear} and ${currentYear + 6}`;
+    if (!formData.section.trim()) {
+      errs.section = "Section is required (Write N/A if single section)";
     }
 
     setFormErrors(errs);
@@ -283,7 +278,7 @@ function RegisterId() {
           full_name: formData.full_name,
           roll_no: formData.roll_no,
           phone: formData.phone,
-          valid_until: formData.valid_until,
+          section: formData.section,
         },
       });
 
@@ -305,11 +300,8 @@ function RegisterId() {
       }
 
       toast.success("Registration submitted!");
-      if (data.is_csds) {
-        navigate({ to: "/registration-complete", replace: true });
-      } else {
-        navigate({ to: "/payment", replace: true });
-      }
+      // Everyone must pay 300 INR now, redirecting to payment page
+      navigate({ to: "/payment", replace: true });
     } catch (err: any) {
       console.error("Registration submission error:", err);
       const errMsg = err?.message || "Failed to submit registration. Check details.";
@@ -392,16 +384,17 @@ function RegisterId() {
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium">Valid Until (Year)</label>
+              <label className="mb-1 block text-sm font-medium">Section</label>
               <input
                 type="text"
-                value={formData.valid_until}
-                onChange={(e) => setFormData({ ...formData, valid_until: e.target.value })}
-                className="input w-full"
-                placeholder="e.g. 2028"
-                maxLength={4}
+                value={formData.section}
+                onChange={(e) => setFormData({ ...formData, section: e.target.value })}
+                className="input w-full uppercase"
+                placeholder="e.g. A, B, C or N/A"
+                maxLength={10}
               />
-              {formErrors.valid_until && <p className="mt-1 text-xs text-destructive">{formErrors.valid_until}</p>}
+              <p className="mt-1 text-[11px] text-muted-foreground">If your department only has a single section, write N/A.</p>
+              {formErrors.section && <p className="mt-1 text-xs text-destructive">{formErrors.section}</p>}
             </div>
 
             <div className="pt-2">
@@ -434,92 +427,13 @@ function RegisterId() {
       <div className="w-full rounded-xl border border-border bg-surface p-8 shadow-card">
         <h1 className="font-display text-3xl font-bold">Verify Student ID</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Upload or capture both the FRONT and BACK sides of your College ID Card to activate your account.
+          Upload or capture the BACK side of your College ID Card to activate your account.
         </p>
 
         {/* Upload slots */}
-        <div className="mt-8 grid gap-6 sm:grid-cols-2">
-          {/* Front Side */}
-          <div className="flex flex-col items-center">
-            <div className="mb-2 text-sm font-medium">ID Card — Front</div>
-            <input
-              type="file"
-              ref={frontInputRef}
-              onChange={(e) => handleFileChange(e, "front")}
-              accept="image/*"
-              className="hidden"
-            />
-            
-            {activeCameraSlot === "front" ? (
-              <div className="relative aspect-[3/2] w-full overflow-hidden rounded-lg border-2 border-primary bg-black">
-                <video 
-                  ref={videoRef} 
-                  className="h-full w-full object-cover" 
-                  autoPlay 
-                  playsInline 
-                  muted 
-                />
-                <div className="absolute bottom-2 inset-x-0 flex justify-center gap-2 px-4 z-20">
-                  <button 
-                    type="button"
-                    onClick={capturePhoto}
-                    className="rounded-full bg-accent text-white px-3 py-1.5 text-xs font-bold shadow-glow hover:opacity-90 flex items-center gap-1"
-                  >
-                    📸 Capture
-                  </button>
-                  <button 
-                    type="button"
-                    onClick={stopCamera}
-                    className="rounded-full bg-white text-black px-3 py-1.5 text-xs font-bold hover:bg-secondary border border-border"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            ) : frontImage ? (
-              <div className="group relative aspect-[3/2] w-full overflow-hidden rounded-lg border border-border bg-background">
-                <img src={frontImage} alt="ID Front Preview" className="h-full w-full object-cover" />
-                <div className="absolute inset-0 flex flex-col gap-2 items-center justify-center bg-black/60 opacity-0 transition-opacity group-hover:opacity-100">
-                  <button
-                    onClick={() => startCamera("front")}
-                    className="flex items-center gap-1.5 rounded-full bg-accent px-3 py-1.5 text-[11px] font-semibold text-white hover:opacity-90"
-                  >
-                    📸 Capture with Camera
-                  </button>
-                  <button
-                    onClick={() => triggerUpload("front")}
-                    className="flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-[11px] font-semibold text-black hover:bg-secondary"
-                  >
-                    📁 Upload File
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="flex aspect-[3/2] w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-border bg-background/60 p-4">
-                <Camera className="h-8 w-8 text-muted-foreground mb-3" />
-                <div className="flex flex-col gap-2 w-full max-w-[160px]">
-                  <button
-                    type="button"
-                    onClick={() => startCamera("front")}
-                    className="rounded-full bg-primary text-primary-foreground px-3 py-1.5 text-[11px] font-semibold hover:opacity-90"
-                  >
-                    📸 Use Camera
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => triggerUpload("front")}
-                    className="rounded-full border border-border bg-white text-black px-3 py-1.5 text-[11px] font-semibold hover:bg-secondary"
-                  >
-                    📁 Upload Photo
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Back Side */}
-          <div className="flex flex-col items-center">
-            <div className="mb-2 text-sm font-medium">ID Card — Back</div>
+        <div className="mt-8 flex flex-col items-center justify-center">
+          <div className="flex flex-col items-center w-full max-w-sm">
+            <div className="mb-2 text-sm font-medium">ID Card — Back Side</div>
             <input
               type="file"
               ref={backInputRef}
@@ -599,12 +513,12 @@ function RegisterId() {
         <div className="mt-8 flex flex-col gap-4 border-t border-dashed border-black/20 pt-6">
           <div className="flex items-start gap-2 text-xs text-muted-foreground">
             <AlertCircle className="h-4 w-4 shrink-0 text-accent" />
-            <p>Ensure the photos are clear and details such as Name, Roll Number, and Expiry Year are readable.</p>
+            <p>Ensure the photo is clear and details such as Roll Number and Contact Phone are readable.</p>
           </div>
 
           <button
             onClick={handleUploadSubmit}
-            disabled={!frontImage || !backImage}
+            disabled={!backImage}
             className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-primary to-accent px-4 py-3 text-sm font-semibold text-primary-foreground shadow-glow hover:opacity-90 disabled:opacity-50"
           >
             Scan & Verify ID <CheckCircle2 className="h-4 w-4" />

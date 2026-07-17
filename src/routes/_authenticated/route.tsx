@@ -159,8 +159,8 @@ function AuthenticatedLayout() {
     );
   }
 
-  // 4. Non-CSD unpaid users must go to payment page
-  if (!profile.is_csds && !hasPaid) {
+  // 4. Unpaid users must go to payment page (everyone must pay 300 INR)
+  if (!hasPaid) {
     navigate({ to: "/payment", replace: true });
     return null;
   }
