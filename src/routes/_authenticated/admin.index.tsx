@@ -122,6 +122,78 @@ function AdminDashboard() {
     }
   };
 
+  const handleTogglePayment = async (profileId: string, markPaid: boolean) => {
+    setActionId(profileId);
+    try {
+      if (markPaid) {
+        // 1. Check if there is an existing payment
+        const { data: existing } = await supabase
+          .from("payments")
+          .select("id")
+          .eq("profile_id", profileId)
+          .maybeSingle();
+
+        if (existing) {
+          const { error } = await supabase
+            .from("payments")
+            .update({ status: "paid" })
+            .eq("id", existing.id);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from("payments")
+            .insert({
+              profile_id: profileId,
+              amount: 300,
+              status: "paid",
+              utr: "MANUAL-ADMIN",
+              screenshot_url: null
+            });
+          if (error) throw error;
+        }
+
+        // 2. Set profile status to approved
+        const accessExpires = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
+        const { error: profError } = await supabase
+          .from("profiles")
+          .update({
+            verification_status: "approved",
+            access_expires_at: accessExpires
+          })
+          .eq("id", profileId);
+        
+        if (profError) throw profError;
+        toast.success("Payment marked as paid and profile approved!");
+      } else {
+        // Mark as unpaid: delete payment records
+        const { error: payError } = await supabase
+          .from("payments")
+          .delete()
+          .eq("profile_id", profileId);
+        
+        if (payError) throw payError;
+
+        // Reset profile verification to pending and remove access expiration
+        const { error: profError } = await supabase
+          .from("profiles")
+          .update({
+            verification_status: "pending",
+            access_expires_at: null
+          })
+          .eq("id", profileId);
+
+        if (profError) throw profError;
+        toast.success("Payment removed and approval revoked.");
+      }
+      await loadProfiles();
+    } catch (err: any) {
+      console.error("Failed to toggle payment status:", err);
+      toast.error(err.message || "Failed to update payment status");
+    } finally {
+      setActionId(null);
+    }
+  };
+
   const handleGraduate = async (batchCode: string, currentYear: number) => {
     const nextYear = currentYear + 1;
     const yearLabels = ["", "1st Year", "2nd Year", "3rd Year", "4th Year", "Graduated (Alumni)"];
@@ -197,23 +269,36 @@ function AdminDashboard() {
 
   const getPaymentStatus = (p: any) => {
     const payList = p.payments || [];
+    const isBusy = actionId === p.id;
     
     // Find manual payment details if they exist
     const manualPay = payList.find((pay: any) => pay.utr || pay.screenshot_url);
     const hasPaid = payList.some((pay: any) => pay.status === "paid");
     
     return (
-      <div className="flex flex-col items-center gap-1.5">
+      <div className="flex flex-col items-center gap-1.5 min-w-[110px]">
         {hasPaid ? (
-          <span className="rounded-full bg-blue-50 text-blue-700 border border-blue-300 px-2 py-0.5 text-xs font-semibold">Paid</span>
+          <span className="rounded-full bg-blue-50 text-blue-700 border border-blue-300 px-2.5 py-0.5 text-xs font-semibold">Paid</span>
         ) : manualPay ? (
-          <span className="rounded-full bg-amber-50 text-amber-700 border border-amber-300 px-2 py-0.5 text-xs font-medium">Pending Check</span>
+          <span className="rounded-full bg-amber-50 text-amber-700 border border-amber-300 px-2.5 py-0.5 text-xs font-medium">Pending Check</span>
         ) : (
-          <span className="rounded-full bg-red-50 text-red-700 border border-red-300 px-2 py-0.5 text-xs font-medium">Unpaid</span>
+          <span className="rounded-full bg-red-50 text-red-700 border border-red-300 px-2.5 py-0.5 text-xs font-medium">Unpaid</span>
         )}
+
+        <button
+          onClick={() => handleTogglePayment(p.id, !hasPaid)}
+          disabled={isBusy || loading}
+          className={`text-[10px] font-bold px-2 py-1 rounded-md border mt-0.5 transition-all active:scale-95 disabled:opacity-50 ${
+            hasPaid
+              ? "bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200"
+              : "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200 shadow-sm"
+          }`}
+        >
+          {isBusy ? "Saving..." : hasPaid ? "Remove Approval" : "Mark as Paid"}
+        </button>
         
         {manualPay && (
-          <div className="text-[11px] text-muted-foreground border-t border-border/50 pt-1 text-center font-mono mt-1 space-y-0.5">
+          <div className="text-[11px] text-muted-foreground border-t border-border/50 pt-1 text-center font-mono mt-1 space-y-0.5 w-full">
             <div>UTR: {manualPay.utr || "N/A"}</div>
             {manualPay.screenshot_url && (
               <div>
@@ -316,25 +401,28 @@ function AdminDashboard() {
                             : "—"}
                         </td>
                         <td className="p-3.5 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            {p.verification_status !== "approved" ? (
-                              <button
-                                onClick={() => handleAction(p.id, "approve")}
-                                disabled={isBusy || loading}
-                                className="inline-flex items-center gap-1 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white border border-emerald-700 px-2.5 py-1 text-xs font-semibold disabled:opacity-50 transition-colors"
-                                title="Approve Registration"
-                              >
-                                <Check className="h-3 w-3" /> Approve
-                              </button>
+                          <div className="flex items-center justify-end gap-3">
+                            {p.verification_status === "pending" ? (
+                              <div className="inline-flex gap-1.5">
+                                <button
+                                  onClick={() => handleAction(p.id, "approve")}
+                                  disabled={isBusy || loading}
+                                  className="inline-flex items-center gap-1 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white border border-emerald-700 px-2.5 py-1 text-xs font-semibold disabled:opacity-50 transition-colors"
+                                  title="Approve ID Registration"
+                                >
+                                  <Check className="h-3 w-3" /> Approve ID
+                                </button>
+                                <button
+                                  onClick={() => handleAction(p.id, "reject")}
+                                  disabled={isBusy || loading}
+                                  className="inline-flex items-center gap-1 rounded-full bg-red-600 hover:bg-red-700 text-white border border-red-700 px-2.5 py-1 text-xs font-semibold disabled:opacity-50 transition-colors"
+                                  title="Reject ID Registration"
+                                >
+                                  <X className="h-3 w-3" /> Reject ID
+                                </button>
+                              </div>
                             ) : (
-                              <button
-                                onClick={() => handleAction(p.id, "reject")}
-                                disabled={isBusy || loading}
-                                className="inline-flex items-center gap-1 rounded-full bg-amber-500 hover:bg-amber-600 text-white border border-amber-600 px-2.5 py-1 text-xs font-semibold disabled:opacity-50 transition-colors"
-                                title="Remove Approval (Reject)"
-                              >
-                                <X className="h-3 w-3" /> Remove Approval
-                              </button>
+                              <span className="text-xs text-muted-foreground italic font-medium">Finalized</span>
                             )}
                             <button
                               onClick={() => handleAction(p.id, "delete")}
