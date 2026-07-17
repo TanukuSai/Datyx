@@ -304,8 +304,8 @@ function AdminDashboard() {
                         <td className="p-3.5 font-semibold text-foreground">{p.full_name}</td>
                         <td className="p-3.5 font-mono text-xs">{p.roll_no}</td>
                         <td className="p-3.5 text-center">
-                          <span className="rounded-md border border-border bg-background px-2 py-0.5 text-xs font-mono">
-                            {p.branch_code}
+                          <span className="rounded-md border border-border bg-background px-2.5 py-0.5 text-xs font-semibold">
+                            {getDepartmentName(p.branch_code)}
                           </span>
                         </td>
                         <td className="p-3.5 text-center">{getPaymentStatus(p)}</td>
@@ -316,28 +316,25 @@ function AdminDashboard() {
                             : "—"}
                         </td>
                         <td className="p-3.5 text-right">
-                          <div className="flex items-center justify-end gap-3">
-                            {p.verification_status === "pending" ? (
-                              <div className="inline-flex gap-1.5">
-                                <button
-                                  onClick={() => handleAction(p.id, "approve")}
-                                  disabled={isBusy || loading}
-                                  className="inline-flex items-center gap-1 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white border border-emerald-700 px-2.5 py-1 text-xs font-semibold disabled:opacity-50 transition-colors"
-                                  title="Approve Registration"
-                                >
-                                  <Check className="h-3 w-3" /> Approve
-                                </button>
-                                <button
-                                  onClick={() => handleAction(p.id, "reject")}
-                                  disabled={isBusy || loading}
-                                  className="inline-flex items-center gap-1 rounded-full bg-red-600 hover:bg-red-700 text-white border border-red-700 px-2.5 py-1 text-xs font-semibold disabled:opacity-50 transition-colors"
-                                  title="Reject Registration"
-                                >
-                                  <X className="h-3 w-3" /> Reject
-                                </button>
-                              </div>
+                          <div className="flex items-center justify-end gap-2">
+                            {p.verification_status !== "approved" ? (
+                              <button
+                                onClick={() => handleAction(p.id, "approve")}
+                                disabled={isBusy || loading}
+                                className="inline-flex items-center gap-1 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white border border-emerald-700 px-2.5 py-1 text-xs font-semibold disabled:opacity-50 transition-colors"
+                                title="Approve Registration"
+                              >
+                                <Check className="h-3 w-3" /> Approve
+                              </button>
                             ) : (
-                              <span className="text-xs text-muted-foreground italic font-medium">Finalized</span>
+                              <button
+                                onClick={() => handleAction(p.id, "reject")}
+                                disabled={isBusy || loading}
+                                className="inline-flex items-center gap-1 rounded-full bg-amber-500 hover:bg-amber-600 text-white border border-amber-600 px-2.5 py-1 text-xs font-semibold disabled:opacity-50 transition-colors"
+                                title="Remove Approval (Reject)"
+                              >
+                                <X className="h-3 w-3" /> Remove Approval
+                              </button>
                             )}
                             <button
                               onClick={() => handleAction(p.id, "delete")}
