@@ -148,8 +148,8 @@ function Game() {
           <h1 className="font-display text-4xl font-extrabold sm:text-5xl tracking-tight">
             SQL Quest <span className="text-gradient">Data Science Challenge</span>
           </h1>
-          <p className="text-muted-foreground text-sm max-w-xl">
-            Learn SQL structured curriculum through active challenges, inline theory lessons, code examples, and practice playgrounds.
+          <p className="text-muted-foreground text-sm max-w-xl font-medium">
+            Welcome to the ultimate SQL playground! Databases power the world's biggest apps (Instagram, Netflix, Spotify)—and today, <span className="text-foreground font-semibold">you</span> run the queries. Start by building your first table, insert data, and run aggregate analysis. Solve the challenges, race the clock, and claim your crown on the live leaderboard! 🚀🔥
           </p>
 
           <div className="flex flex-wrap items-center gap-3">

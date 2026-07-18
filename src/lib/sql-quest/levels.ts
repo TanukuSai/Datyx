@@ -15,11 +15,125 @@ export interface Level {
   hints: string[];
   starter?: string;
   orderMatters?: boolean; // default: true when the task specifies an order.
+  verification?: string; // Verification query run after user's query to verify DDL/DML state changes.
 }
 
 export const LEVELS: Level[] = [
   {
     id: 1,
+    tier: "beginner",
+    title: "Creating a Table",
+    brief: "CREATE TABLE command",
+    task: `📚 THEORY:
+Data Definition Language (DDL) is used to define the database structure.
+The \`CREATE TABLE\` statement is used to create a new table in the database.
+You must specify the name of the table and the columns, along with their data types (e.g., INTEGER, TEXT).
+
+SYNTAX:
+CREATE TABLE table_name (
+  column1_name DATA_TYPE,
+  column2_name DATA_TYPE
+);
+
+🎯 TASK:
+Write a query to create a table named \`students\` with two columns:
+- \`id\` (type: INTEGER)
+- \`name\` (type: TEXT)`,
+    xp: 15,
+    setup: "",
+    solution: "CREATE TABLE students (id INTEGER, name TEXT);",
+    starter: "-- Write CREATE TABLE here\n",
+    hints: [
+      "Use `CREATE TABLE students (...)`",
+      "Specify columns `id INTEGER` and `name TEXT` separated by a comma."
+    ],
+    verification: "SELECT name, type FROM sqlite_master WHERE type='table' AND name='students';",
+    orderMatters: false,
+  },
+  {
+    id: 2,
+    tier: "beginner",
+    title: "Inserting Data",
+    brief: "INSERT INTO command",
+    task: `📚 THEORY:
+Once a table is created, we use Data Manipulation Language (DML) to populate it.
+The \`INSERT INTO\` statement is used to insert new rows of data into a table.
+Values must match the order and data types of the columns defined in the table.
+
+SYNTAX:
+INSERT INTO table_name VALUES (value1, 'value2');
+
+🎯 TASK:
+Write a query to insert a row into the \`students\` table with an \`id\` of \`1\` and a \`name\` of \`'Rohan'\`.`,
+    xp: 15,
+    setup: "CREATE TABLE students (id INTEGER, name TEXT);",
+    solution: "INSERT INTO students VALUES (1, 'Rohan');",
+    starter: "-- Write INSERT INTO here\n",
+    hints: [
+      "Use `INSERT INTO students VALUES (1, 'Rohan');`",
+      "Remember to wrap text values in single quotes ('Rohan')."
+    ],
+    verification: "SELECT * FROM students;",
+    orderMatters: false,
+  },
+  {
+    id: 3,
+    tier: "beginner",
+    title: "Updating Data",
+    brief: "UPDATE command",
+    task: `📚 THEORY:
+To modify existing data rows in a table, we use the \`UPDATE\` statement.
+⚠️ IMPORTANT: Always use a \`WHERE\` clause in an UPDATE statement! Otherwise, ALL rows in the table will be updated!
+
+SYNTAX:
+UPDATE table_name SET column_name = 'new_value' WHERE condition;
+
+🎯 TASK:
+Update the record in the \`students\` table. Change the \`name\` of the student with \`id = 1\` to \`'Rohan Sharma'\`.`,
+    xp: 15,
+    setup: `
+      CREATE TABLE students (id INTEGER, name TEXT);
+      INSERT INTO students VALUES (1, 'Rohan'), (2, 'Kabir');
+    `,
+    solution: "UPDATE students SET name = 'Rohan Sharma' WHERE id = 1;",
+    starter: "-- Write UPDATE here\n",
+    hints: [
+      "Use `UPDATE students SET name = 'Rohan Sharma'`",
+      "Specify `WHERE id = 1` to target only Rohan."
+    ],
+    verification: "SELECT * FROM students ORDER BY id;",
+    orderMatters: true,
+  },
+  {
+    id: 4,
+    tier: "beginner",
+    title: "Deleting Data",
+    brief: "DELETE FROM command",
+    task: `📚 THEORY:
+To delete existing records from a table, we use the \`DELETE\` statement.
+⚠️ IMPORTANT: Always use a \`WHERE\` clause in a DELETE statement! Otherwise, ALL rows in the table will be permanently deleted!
+
+SYNTAX:
+DELETE FROM table_name WHERE condition;
+
+🎯 TASK:
+Delete the student with \`id = 2\` (Kabir) from the \`students\` table.`,
+    xp: 15,
+    setup: `
+      CREATE TABLE students (id INTEGER, name TEXT);
+      INSERT INTO students VALUES (1, 'Rohan Sharma'), (2, 'Kabir');
+    `,
+    solution: "DELETE FROM students WHERE id = 2;",
+    starter: "-- Write DELETE here\n",
+    hints: [
+      "Use `DELETE FROM students`",
+      "Filter the row using `WHERE id = 2`."
+    ],
+    verification: "SELECT * FROM students ORDER BY id;",
+    orderMatters: true,
+  },
+  {
+    id: 5,
     tier: "beginner",
     title: "Meet your data",
     brief: "SELECT everything",
@@ -44,7 +158,7 @@ Write a query to return all columns and all rows from the \`users\` table.`,
     orderMatters: false,
   },
   {
-    id: 2,
+    id: 6,
     tier: "beginner",
     title: "Pick your columns",
     brief: "Project columns",
@@ -66,7 +180,7 @@ Write a query to return only the \`name\` and \`city\` columns for all users in 
     orderMatters: false,
   },
   {
-    id: 3,
+    id: 7,
     tier: "beginner",
     title: "Filter with WHERE",
     brief: "Only Mumbai users",
@@ -89,7 +203,7 @@ Write a query to return the \`id\` and \`name\` of all users whose city is exact
     orderMatters: false,
   },
   {
-    id: 4,
+    id: 8,
     tier: "beginner",
     title: "Sorting rows",
     brief: "Order by price",
@@ -111,7 +225,7 @@ Write a query to return the \`name\` and \`price\` of all products from the \`pr
     hints: ["Use `ORDER BY price DESC`."],
   },
   {
-    id: 5,
+    id: 9,
     tier: "beginner",
     title: "Top results",
     brief: "LIMIT findings",
@@ -133,7 +247,7 @@ Write a query to find the 3 most expensive products from the \`products\` table.
     hints: ["Combine `ORDER BY` with `LIMIT`."],
   },
   {
-    id: 6,
+    id: 10,
     tier: "beginner",
     title: "Pattern matching",
     brief: "LIKE operator",
@@ -157,7 +271,7 @@ Write a query to return the \`name\` of all users in the \`users\` table whose \
     orderMatters: false,
   },
   {
-    id: 7,
+    id: 11,
     tier: "beginner",
     title: "Distinct values",
     brief: "Remove duplicates",
@@ -179,7 +293,7 @@ Write a query to return each unique (distinct) city from the \`users\` table.`,
     orderMatters: false,
   },
   {
-    id: 8,
+    id: 12,
     tier: "intermediate",
     title: "Count rows",
     brief: "Count aggregate",
@@ -202,7 +316,7 @@ Write a query to count the total number of rows in the \`orders\` table. Name th
     hints: ["`COUNT(*)` counts rows.", "Use `AS total` to alias the column."],
   },
   {
-    id: 9,
+    id: 13,
     tier: "intermediate",
     title: "Grouping aggregates",
     brief: "GROUP BY sums",
@@ -225,7 +339,7 @@ Return the \`user_id\` and the total sum as \`total_amount\`. Sort the result by
     hints: ["Use `GROUP BY user_id` and `SUM(amount) AS total_amount`."],
   },
   {
-    id: 10,
+    id: 14,
     tier: "intermediate",
     title: "Aggregate filtering",
     brief: "HAVING filters",
@@ -252,4 +366,4 @@ export function getLevel(id: number): Level | undefined {
   return LEVELS.find((l) => l.id === id);
 }
 
-export const LEVEL_COUNT_TOTAL = 10;
+export const LEVEL_COUNT_TOTAL = 14;

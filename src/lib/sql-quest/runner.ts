@@ -29,14 +29,16 @@ export interface RunOutcome {
   elapsedMs: number;
 }
 
-export async function runQuery(setup: string, query: string): Promise<RunOutcome> {
+export async function runQuery(setup: string, query: string, verification?: string): Promise<RunOutcome> {
   const start = performance.now();
   let db: Database | null = null;
   try {
     const SQL = await getSql();
     db = new SQL.Database();
     db.exec(setup);
-    const res = db.exec(query);
+    db.exec(query);
+    const finalQuery = verification || query;
+    const res = db.exec(finalQuery);
     const first = res[res.length - 1]; // The final SELECT statement.
     if (!first) {
       return {

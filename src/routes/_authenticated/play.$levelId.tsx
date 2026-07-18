@@ -109,7 +109,7 @@ function Play() {
     setHintIdx(0);
     setShowHint(false);
     // Precompute expected output once per level.
-    runQuery(level.setup, level.solution).then((r) => {
+    runQuery(level.setup, level.solution, level.verification).then((r) => {
       if (r.ok && r.result) setExpected(r.result);
     });
   }, [level]);
@@ -149,7 +149,7 @@ function Play() {
   async function onRun() {
     setBusy(true);
     setSubmitted(null);
-    const r = await runQuery(level!.setup, code);
+    const r = await runQuery(level!.setup, code, level!.verification);
     setOutcome(r);
     setBusy(false);
   }
@@ -158,7 +158,7 @@ function Play() {
     if (!level) return;
     setBusy(true);
     setSubmitted(null);
-    const r = await runQuery(level.setup, code);
+    const r = await runQuery(level.setup, code, level.verification);
     setOutcome(r);
     if (!r.ok || !r.result) {
       setSubmitted({ correct: false, reason: r.error ?? "Query error" });

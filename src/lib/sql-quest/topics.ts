@@ -25,23 +25,57 @@ export interface Topic {
 export const TOPICS: Topic[] = [
   {
     id: "topic_1",
+    name: "DDL & DML Commands",
+    description: "Learn to build database tables, insert rows, update records, and delete rows.",
+    levelsRange: "Levels 1–4",
+    levelIds: [1, 2, 3, 4],
+    learningResources: {
+      theory: `### 1. Data Definition Language (DDL)
+Data Definition Language (DDL) includes commands that define and modify the schema of your database tables.
+- **CREATE TABLE:** Initializes a brand new table. You must supply a table name and define columns with their matching types:
+  \`CREATE TABLE students (id INTEGER, name TEXT);\`
+- **Data Types:** Common SQLite data types include \`INTEGER\` (numbers), \`TEXT\` (strings/text), and \`REAL\` (floats/decimals).
+
+### 2. Data Manipulation Language (DML)
+Data Manipulation Language (DML) includes commands used to modify and manage rows of data inside tables.
+- **INSERT INTO:** Adds a new row of data. Value order must align with the columns:
+  \`INSERT INTO students VALUES (1, 'Rohan');\`
+- **UPDATE:** Edits existing rows. Use a \`SET\` statement for values and a \`WHERE\` statement to isolate target records:
+  \`UPDATE students SET name = 'Rohan Sharma' WHERE id = 1;\`
+- **DELETE:** Removes rows from a table using a filtering condition:
+  \`DELETE FROM students WHERE id = 2;\`
+
+⚠️ **CRITICAL CAUTION:** Always specify a \`WHERE\` filter on \`UPDATE\` and \`DELETE\` commands. If you omit it, the operation will affect **every single row** in your table!`,
+      examples: [
+        {
+          sql: "CREATE TABLE books (id INTEGER, title TEXT);",
+          explanation: "Creates a new table named books with numeric id and textual title columns."
+        },
+        {
+          sql: "UPDATE products SET price = 50 WHERE id = 4;",
+          explanation: "Changes the price of product ID 4 to 50."
+        }
+      ],
+      practice: {
+        question: "How do you delete a product with ID 10 from the products table?",
+        sql: "DELETE FROM products WHERE id = 10;",
+        explanation: "The DELETE command with a WHERE clause removes only the matching row."
+      }
+    }
+  },
+  {
+    id: "topic_2",
     name: "SQL Basics & Filtering",
     description: "Learn how to query tables and filter rows based on specific conditions.",
-    levelsRange: "Levels 1–5",
-    levelIds: [1, 2, 3, 4, 5],
+    levelsRange: "Levels 5–9",
+    levelIds: [5, 6, 7, 8, 9],
     learningResources: {
-      theory: `### 1. Introduction to Relational Databases
-Relational databases store information in structured tables. A **table** represents an entity (such as "users" or "products").
-- **Columns (fields):** Define the attributes of the data (e.g., ID, name, price). Each column has a specific data type (INTEGER, TEXT, BOOLEAN, etc.).
-- **Rows (records):** Represent individual data entries in the table.
-- **Primary Key:** A unique column (or set of columns) that identifies each row (e.g., user_id).
-
-### 2. The SELECT and FROM Clause
+      theory: `### 1. The SELECT and FROM Clause
 To retrieve data, you use the \`SELECT\` statement, which defines *which* columns to show. The \`FROM\` clause specifies *which* table to retrieve them from:
 - \`SELECT * FROM users;\` retrieves **every column** and row.
 - \`SELECT name, city FROM users;\` retrieves only the **name** and **city** columns, discarding all other attributes.
 
-### 3. Filtering Rows with WHERE
+### 2. Filtering Rows with WHERE
 The \`WHERE\` clause acts as a filter, retaining only the rows that satisfy a specific logical condition:
 - **Comparison Operators:** You filter data using standard operators:
   - \`=\` (Equal to)
@@ -50,7 +84,7 @@ The \`WHERE\` clause acts as a filter, retaining only the rows that satisfy a sp
   - \`>=\`, \`<=\` (Greater than or equal to, Less than or equal to)
 - **Strings vs Numbers:** Numeric values are written directly (e.g., \`price > 1000\`), while string text values **must be enclosed in single quotes** (e.g., \`city = 'Mumbai'\`). Single quotes are a strict SQL standard.
 
-### 4. Combining Conditions (Boolean Logic)
+### 3. Combining Conditions (Boolean Logic)
 You can build complex filtering rules by combining conditions:
 - \`AND\`: Evaluates to true only if **both** conditions are true (e.g., \`price > 100 AND price < 500\`).
 - \`OR\`: Evaluates to true if **either** condition is true (e.g., \`city = 'Mumbai' OR city = 'Delhi'\`).
@@ -73,11 +107,11 @@ You can build complex filtering rules by combining conditions:
     }
   },
   {
-    id: "topic_2",
+    id: "topic_3",
     name: "Sorting, Duplicates & Pattern Matching",
     description: "Sort records, limit output sizes, retrieve unique lists, and search patterns.",
-    levelsRange: "Levels 6–7",
-    levelIds: [6, 7],
+    levelsRange: "Levels 10–11",
+    levelIds: [10, 11],
     learningResources: {
       theory: `### 1. Sorting Results with ORDER BY
 By default, database query results are returned in an arbitrary order. To sort your output, use the \`ORDER BY\` clause followed by the column name:
@@ -118,11 +152,11 @@ The \`LIKE\` operator performs simple wildcard comparisons, usually on text colu
     }
   },
   {
-    id: "topic_3",
+    id: "topic_4",
     name: "Aggregates & Grouping",
     description: "Perform mathematical calculations across rows and group summaries.",
-    levelsRange: "Levels 8–10",
-    levelIds: [8, 9, 10],
+    levelsRange: "Levels 12–14",
+    levelIds: [12, 13, 14],
     learningResources: {
       theory: `### 1. Aggregate Functions
 Aggregates process columns across multiple rows to return a single computed summary value:
