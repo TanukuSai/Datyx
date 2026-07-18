@@ -101,12 +101,12 @@ function Users() {
     }
 
     const upperRoll = rollNo.trim().toUpperCase();
-    const rollNoRegex = /^[0-9]{2}[A-Z][0-9]{2}[A-Z][0-9]{4}$/;
+    const rollNoRegex = /^[0-9]{2}[A-Z][0-9]{2}[A-Z][0-9]{2}[A-Z0-9]{2}$/;
     if (!upperRoll) {
       toast.error("Roll Number is required");
       return;
     } else if (!rollNoRegex.test(upperRoll)) {
-      toast.error("Roll Number must match format (e.g. 24R91A6760)");
+      toast.error("Roll Number must match format (e.g. 24R91A6760 or 25R91A05B5)");
       return;
     }
 
@@ -172,9 +172,9 @@ function Users() {
     }
 
     const upperRoll = scratchRollNo.trim().toUpperCase();
-    const rollNoRegex = /^[0-9]{2}[A-Z][0-9]{2}[A-Z][0-9]{4}$/;
+    const rollNoRegex = /^[0-9]{2}[A-Z][0-9]{2}[A-Z][0-9]{2}[A-Z0-9]{2}$/;
     if (!rollNoRegex.test(upperRoll)) {
-      toast.error("Roll Number must match format (e.g. 24R91A6760)");
+      toast.error("Roll Number must match format (e.g. 24R91A6760 or 25R91A05B5)");
       return;
     }
 

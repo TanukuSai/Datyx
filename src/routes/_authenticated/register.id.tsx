@@ -249,11 +249,11 @@ function RegisterId() {
     }
     
     const upperRoll = formData.roll_no.trim().toUpperCase();
-    const rollNoRegex = /^[0-9]{2}[A-Z][0-9]{2}[A-Z][0-9]{4}$/;
+    const rollNoRegex = /^[0-9]{2}[A-Z][0-9]{2}[A-Z][0-9]{2}[A-Z0-9]{2}$/;
     if (!formData.roll_no.trim()) {
       errs.roll_no = "Roll number is required";
     } else if (!rollNoRegex.test(upperRoll)) {
-      errs.roll_no = "Must match format: 24R91A6760";
+      errs.roll_no = "Must match format: 24R91A6760 or 25R91A05B5";
     }
 
     if (!formData.section.trim()) {
