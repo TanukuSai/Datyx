@@ -98,7 +98,8 @@ serve(async (req) => {
       });
     }
 
-    // 6. Insert the profile (Everyone must pay, so status is always pending initially)
+    // 6. Insert the profile (TRIAL ACCESS: auto-approve everyone until July 26, 2026)
+    const trialExpires = "2026-07-26T18:30:00.000Z";
     const { error: insertError } = await adminClient.from("profiles").insert({
       id: user.id,
       roll_no: upperRollNo,
@@ -108,9 +109,20 @@ serve(async (req) => {
       branch_code: branchCode,
       is_csds: isCsds,
       section: finalSection,
-      access_expires_at: null, // set upon admin approval/payment verification
-      verification_status: "pending",
+      access_expires_at: trialExpires,
+      verification_status: "approved",
     });
+
+    if (!insertError) {
+      // Create Paid Trial Payment record
+      await adminClient.from("payments").insert({
+        profile_id: user.id,
+        amount: 0,
+        status: "paid",
+        utr: "TRIAL-ACCESS",
+        screenshot_url: null
+      });
+    }
 
     if (insertError) {
       console.error("Error inserting profile:", insertError);
