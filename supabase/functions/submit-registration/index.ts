@@ -56,9 +56,9 @@ serve(async (req) => {
     }
 
     const upperRollNo = roll_no.trim().toUpperCase();
-    const rollNoRegex = /^[0-9]{2}[A-Z][0-9]{2}[A-Z][0-9]{4}$/;
+    const rollNoRegex = /^[0-9]{2}[A-Z][0-9]{2}[A-Z][0-9]{2}[A-Z0-9]{2}$/;
     if (!rollNoRegex.test(upperRollNo)) {
-      return new Response(JSON.stringify({ error: "Invalid Roll Number format. Expected format: 24R91A6760" }), {
+      return new Response(JSON.stringify({ error: "Invalid Roll Number format. Expected format: 24R91A6760 or 25R91A05B5" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
