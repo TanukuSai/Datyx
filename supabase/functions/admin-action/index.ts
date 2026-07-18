@@ -55,17 +55,113 @@ serve(async (req) => {
       });
     }
 
-    const { profile_id, action } = await req.json();
+    const body = await req.json();
+    const { action } = body;
 
-    if (!profile_id || !action) {
-      return new Response(JSON.stringify({ error: "Missing profile_id or action" }), {
+    if (!action) {
+      return new Response(JSON.stringify({ error: "Missing action parameter" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    if (action !== "approve" && action !== "reject" && action !== "delete") {
-      return new Response(JSON.stringify({ error: "Invalid action. Must be 'approve', 'reject', or 'delete'" }), {
+    if (action !== "approve" && action !== "reject" && action !== "delete" && action !== "onboard_student_scratch") {
+      return new Response(JSON.stringify({ error: "Invalid action" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // 1. Support Onboarding Student from scratch
+    if (action === "onboard_student_scratch") {
+      const { email, full_name, roll_no, section, phone } = body;
+      if (!email || !full_name || !roll_no) {
+        return new Response(JSON.stringify({ error: "Missing required fields: email, full_name, roll_no" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      console.log(`Admin ${user.id} onboarding new student ${full_name} (${email}) from scratch`);
+
+      // Create Auth User
+      const { data: authData, error: createError } = await adminClient.auth.admin.createUser({
+        email: email.trim().toLowerCase(),
+        email_confirm: true,
+        user_metadata: { full_name: full_name.trim() }
+      });
+
+      if (createError || !authData.user) {
+        console.error("Error creating auth user:", createError);
+        return new Response(JSON.stringify({ error: createError?.message || "Failed to create authentication account" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const newUserId = authData.user.id;
+      const upperRoll = roll_no.trim().toUpperCase();
+      const branchCode = upperRoll.substring(6, 8);
+      const isCsds = branchCode === "67";
+      const finalSection = section && section.trim() !== "" ? section.trim().toUpperCase() : "N/A";
+      const accessExpires = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
+
+      // Insert Profile row
+      const { error: profileError } = await adminClient
+        .from("profiles")
+        .insert({
+          id: newUserId,
+          roll_no: upperRoll,
+          full_name: full_name.trim(),
+          email: email.trim().toLowerCase(),
+          phone: phone ? phone.trim() : null,
+          branch_code: branchCode,
+          is_csds: isCsds,
+          section: finalSection,
+          verification_status: "approved",
+          access_expires_at: accessExpires
+        });
+
+      if (profileError) {
+        console.error("Error inserting profile for scratch onboard:", profileError);
+        // Clean up Auth user to avoid orphan auth accounts
+        await adminClient.auth.admin.deleteUser(newUserId);
+        return new Response(JSON.stringify({ error: profileError.message || "Failed to create profile row" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Upsert User Role member
+      await adminClient.from("user_roles").upsert({
+        user_id: newUserId,
+        role: "member"
+      });
+
+      // Create Paid Payment record
+      const { error: paymentError } = await adminClient
+        .from("payments")
+        .insert({
+          profile_id: newUserId,
+          amount: 300,
+          status: "paid",
+          utr: "MANUAL-ADMIN-ONBOARD",
+          screenshot_url: null
+        });
+
+      if (paymentError) {
+        console.warn("Warning: failed to insert payment record during scratch onboarding:", paymentError);
+      }
+
+      console.log(`Successfully onboarded student ${full_name} with ID ${newUserId}`);
+      return new Response(JSON.stringify({ success: true, status: "onboarded", id: newUserId }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { profile_id } = body;
+    if (!profile_id) {
+      return new Response(JSON.stringify({ error: "Missing profile_id" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -150,22 +246,63 @@ serve(async (req) => {
       })
       .eq("id", profile_id);
 
-    // Synchronize payment status
-    const { error: paymentError } = await adminClient
-      .from("payments")
-      .update({ status: paymentStatusValue })
-      .eq("profile_id", profile_id);
-
-    if (paymentError) {
-      console.warn("Warning: failed to update payment status sync:", paymentError);
-    }
-
     if (updateError) {
       console.error("Error updating profile status:", updateError);
       return new Response(JSON.stringify({ error: updateError.message || "Failed to update profile status" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // Synchronize payment status
+    if (action === "approve") {
+      // Check if a payment record already exists
+      const { data: existingPayment, error: fetchPayError } = await adminClient
+        .from("payments")
+        .select("id")
+        .eq("profile_id", profile_id)
+        .maybeSingle();
+
+      if (fetchPayError) {
+        console.warn("Warning: failed to query existing payment:", fetchPayError);
+      }
+
+      if (existingPayment) {
+        // Update existing payment status to paid
+        const { error: payUpdateErr } = await adminClient
+          .from("payments")
+          .update({ status: "paid" })
+          .eq("id", existingPayment.id);
+        
+        if (payUpdateErr) {
+          console.error("Error updating payment status to paid:", payUpdateErr);
+        }
+      } else {
+        // Insert a new paid payment record
+        const { error: payInsertErr } = await adminClient
+          .from("payments")
+          .insert({
+            profile_id: profile_id,
+            amount: 300,
+            status: "paid",
+            utr: "MANUAL-ADMIN-APPROVE",
+            screenshot_url: null
+          });
+        
+        if (payInsertErr) {
+          console.error("Error inserting manual paid payment record:", payInsertErr);
+        }
+      }
+    } else {
+      // Rejections set status to failed for existing payment records
+      const { error: paymentError } = await adminClient
+        .from("payments")
+        .update({ status: paymentStatusValue })
+        .eq("profile_id", profile_id);
+
+      if (paymentError) {
+        console.warn("Warning: failed to update payment status sync:", paymentError);
+      }
     }
 
     console.log(`Admin ${user.id} updated profile ${profile_id} status to ${statusValue}`);
