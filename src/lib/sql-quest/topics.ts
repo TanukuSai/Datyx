@@ -155,8 +155,8 @@ The \`LIKE\` operator performs simple wildcard comparisons, usually on text colu
     id: "topic_4",
     name: "Aggregates & Grouping",
     description: "Perform mathematical calculations across rows and group summaries.",
-    levelsRange: "Levels 12–14",
-    levelIds: [12, 13, 14],
+    levelsRange: "Levels 12–15",
+    levelIds: [12, 13, 14, 15],
     learningResources: {
       theory: `### 1. Aggregate Functions
 Aggregates process columns across multiple rows to return a single computed summary value:

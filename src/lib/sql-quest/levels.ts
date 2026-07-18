@@ -360,10 +360,42 @@ Return \`user_id\` and the total sum as \`total_amount\`. Sort by \`total_amount
     solution: "SELECT user_id, SUM(amount) AS total_amount FROM orders GROUP BY user_id HAVING SUM(amount) > 1000 ORDER BY total_amount DESC;",
     hints: ["Filter aggregates with `HAVING`, not `WHERE`."],
   },
+  {
+    id: 15,
+    tier: "intermediate",
+    title: "Joining Tables",
+    brief: "INNER JOIN command",
+    task: `📚 THEORY:
+Data is often split across multiple tables in a relational database to avoid redundancy.
+To query data from two tables together, we use the \`INNER JOIN\` statement.
+We must specify the column that links the tables (usually a Primary Key matching a Foreign Key) in the \`ON\` clause.
+
+SYNTAX:
+SELECT table1.col, table2.col
+FROM table1
+INNER JOIN table2 ON table1.id = table2.table1_id;
+
+🎯 TASK:
+Combine the \`users\` and \`orders\` tables. Return the \`users.name\` and \`orders.amount\` columns for all records where \`users.id = orders.user_id\`.
+Sort the output rows by \`orders.amount\` from lowest to highest.`,
+    xp: 30,
+    setup: `
+      CREATE TABLE users (id INTEGER, name TEXT);
+      INSERT INTO users VALUES (1, 'Aditi'), (2, 'Kabir'), (3, 'Meera');
+      CREATE TABLE orders (id INTEGER, user_id INTEGER, amount INTEGER);
+      INSERT INTO orders VALUES (101, 1, 500), (102, 2, 1200), (103, 1, 700);
+    `,
+    solution: "SELECT users.name, orders.amount FROM users INNER JOIN orders ON users.id = orders.user_id ORDER BY orders.amount;",
+    hints: [
+      "Use `FROM users INNER JOIN orders ON users.id = orders.user_id`",
+      "Specify `SELECT users.name, orders.amount`",
+      "Add `ORDER BY orders.amount` to sort ascending."
+    ],
+  },
 ];
 
 export function getLevel(id: number): Level | undefined {
   return LEVELS.find((l) => l.id === id);
 }
 
-export const LEVEL_COUNT_TOTAL = 14;
+export const LEVEL_COUNT_TOTAL = 15;

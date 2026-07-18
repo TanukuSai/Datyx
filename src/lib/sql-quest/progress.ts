@@ -94,8 +94,7 @@ export async function recordLevelCompletion(userId: string, levelId: number, xp:
 }
 
 export function isUnlocked(levelId: number, p: Progress): boolean {
-  if (levelId <= 1) return true;
-  return Boolean(p.cleared[levelId - 1]);
+  return true;
 }
 
 export function highestUnlocked(p: Progress): number {
